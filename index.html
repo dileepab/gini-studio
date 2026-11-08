@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Design your own GINI tee, hoodie or arm-cut. Pick a colour and print, see it live, order on WhatsApp.">
+<style>*,*::before,*::after{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<title>GINI Custom Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Instrument+Sans:wght@400;500;600&family=Noto+Sans+Sinhala:wght@400;600&display=swap">
+<style>
+/* Layout: garment on a lit wall at left (sticky), a numbered build sheet at right; stacks on phones. Single dark look, by choice. */
+:root{
+  --soot:#151211; --char:#1f1a18; --ash:#2b2421; --line:#3a312c;
+  --bone:#efe7df; --smoke:#a99b91; --ember:#f0702e; --ember-2:#ffb27a; --ok:#7fc79a;
+  --display:"Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --body:"Instrument Sans", "Noto Sans Sinhala", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --si:"Noto Sans Sinhala", "Iskoola Pota", system-ui, sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--soot);color:var(--bone)}
+body{font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+header.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:22px}
+.brand{font-family:var(--display);font-weight:900;font-size:clamp(34px,6vw,52px);letter-spacing:.02em;line-height:.9;text-transform:uppercase}
+.brand span{color:var(--ember)}
+.brand small{display:block;font-family:var(--si);font-size:14px;font-weight:400;letter-spacing:0;color:var(--smoke);text-transform:none;margin-top:6px}
+.tag{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--smoke)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:32px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr);gap:20px}}
+.stage{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+@media (max-width:860px){
+  .stage{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--soot);padding-block:6px 8px;border-bottom:1px solid var(--line)}
+  .spec{margin-top:6px;font-size:12px;gap:2px 12px}
+  .spec .hint{display:none}
+}
+.frame{position:relative;background:#cbbfb3;border-radius:6px;overflow:hidden;aspect-ratio:900/1205;max-width:100%;margin:0 auto}
+@media (max-width:860px){.frame{height:min(44vh,560px);width:auto;max-width:100%}}
+.frame canvas{display:block;width:100%;height:100%}
+.frame .busy{position:absolute;inset:auto 10px 10px auto;background:rgba(21,18,17,.75);color:var(--bone);font-size:12px;padding:4px 10px;border-radius:99px}
+.spec{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:12px;font-size:13px;color:var(--smoke);font-variant-numeric:tabular-nums;justify-content:center}
+.spec b{color:var(--bone);font-weight:600}
+.panel{display:flex;flex-direction:column;gap:26px;min-width:0}
+.step h2{display:flex;align-items:baseline;gap:10px;margin:0 0 10px;font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:.04em;text-transform:uppercase}
+.step h2 i{font-style:normal;color:var(--ember);font-size:15px}
+.step h2 .si{font-family:var(--si);font-size:13px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--smoke)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{appearance:none;border:1px solid var(--line);background:var(--char);color:var(--bone);font:500 14px var(--body);padding:9px 14px;border-radius:4px;cursor:pointer}
+.chip:hover{border-color:var(--smoke)}
+.chip[aria-pressed="true"]{border-color:var(--ember);background:var(--ash);box-shadow:inset 0 -2px 0 var(--ember)}
+.chip small{display:block;font-size:11px;color:var(--smoke);font-weight:400}
+.sw{width:42px;height:42px;border-radius:50%;border:2px solid var(--line);cursor:pointer;padding:0;position:relative}
+.sw[aria-pressed="true"]{outline:2px solid var(--ember);outline-offset:3px}
+.swlabel{font-size:13px;color:var(--smoke);margin-top:8px}
+.prints{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.pc{appearance:none;border:1px solid var(--line);background:var(--char);border-radius:4px;padding:6px 6px 8px;cursor:pointer;color:var(--bone);text-align:left;display:flex;flex-direction:column;gap:6px;min-width:0}
+.pc .th{aspect-ratio:1;display:grid;place-items:center;border-radius:2px;overflow:hidden}
+.pc .th img{max-width:88%;max-height:88%;object-fit:contain}
+.pc .nm{font-size:12px;line-height:1.25}
+.pc .cd{font-size:10px;letter-spacing:.1em;color:var(--smoke);font-variant-numeric:tabular-nums}
+.pc[aria-pressed="true"]{border-color:var(--ember);box-shadow:inset 0 0 0 1px var(--ember)}
+.th.dark{background:#141414}.th.light{background:#eeeae4}
+.filter{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.filter .chip{padding:5px 10px;font-size:12px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--smoke);letter-spacing:.04em}
+input.t{background:var(--char);border:1px solid var(--line);border-radius:4px;color:var(--bone);font:15px var(--body);padding:10px 12px;min-width:0}
+input.t:focus,.chip:focus-visible,.pc:focus-visible,.sw:focus-visible,.btn:focus-visible{outline:2px solid var(--ember-2);outline-offset:2px}
+.qty{display:flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:4px;width:max-content}
+.qty button{background:var(--char);color:var(--bone);border:0;width:40px;height:40px;font-size:18px;cursor:pointer}
+.qty output{min-width:40px;text-align:center;font-variant-numeric:tabular-nums}
+.summary{background:var(--char);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.summary pre{margin:0;white-space:pre-wrap;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--bone);user-select:all;overflow-wrap:anywhere}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+.btn{appearance:none;border:0;border-radius:4px;padding:12px 18px;font:600 15px var(--body);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+.btn.wa{background:var(--ember);color:#1a0f08}
+.btn.ghost{background:transparent;color:var(--bone);border:1px solid var(--line)}
+.note{font-size:12px;color:var(--smoke)}
+.note.si{font-family:var(--si)}
+.saveimg{margin-top:12px;text-align:center}
+.saveimg img{max-width:100%;border-radius:6px;border:1px solid var(--line)}
+.toast{font-size:13px;color:var(--ok);min-height:1.2em}
+@media (prefers-reduced-motion:no-preference){.chip,.pc,.sw{transition:border-color .15s, box-shadow .15s}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">GINI <span>Custom</span> Studio<small>ඔයාගේම ගිනි ඇඳුම හදාගන්න. ඇඳුම, පාට, design එක තෝරන්න.</small></div>
+    <div class="tag">Made to order · Sri Lanka</div>
+  </header>
+
+  <div class="grid">
+    <section class="stage" aria-label="Live mockup">
+      <div class="frame" id="frame"><canvas id="cv" width="900" height="1205" role="img" aria-label="Mockup of the selected garment with the selected print"></canvas><div class="busy" id="busy">Loading…</div></div>
+      <div class="spec" id="spec"></div>
+    </section>
+
+    <section class="panel">
+      <div class="step">
+        <h2><i>01</i>Garment <span class="si">ඇඳුම</span></h2>
+        <div class="chips" id="garments"></div>
+      </div>
+      <div class="step">
+        <h2><i>02</i>Colour <span class="si">පාට</span></h2>
+        <div class="chips" id="colours"></div>
+        <div class="swlabel" id="colourName"></div>
+      </div>
+      <div class="step">
+        <h2><i>03</i>Design <span class="si">Print එක</span></h2>
+        <div class="filter" id="filter"></div>
+        <div class="prints" id="prints"></div>
+        <p class="note">Every design here is made for this shirt colour, so the ink reads well on it.</p>
+      </div>
+      <div class="step">
+        <h2><i>04</i>Size <span class="si">ප්‍රමාණය</span></h2>
+        <div class="chips" id="sizes"></div>
+        <p class="note" id="sizeNote"></p>
+      </div>
+      <div class="step">
+        <h2><i>05</i>Order <span class="si">ඇණවුම</span></h2>
+        <div class="row">
+          <label class="f" for="nm">Name<input class="t" id="nm" autocomplete="name" placeholder="Kasun Perera"></label>
+          <label class="f" for="city">City<input class="t" id="city" autocomplete="address-level2" placeholder="Kandy"></label>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;margin-top:12px;flex-wrap:wrap">
+          <span class="note">Quantity</span>
+          <div class="qty"><button type="button" id="qm" aria-label="One less">−</button><output id="qv">1</output><button type="button" id="qp" aria-label="One more">+</button></div>
+        </div>
+      </div>
+      <div class="summary">
+        <pre id="msg"></pre>
+        <div class="actions">
+          <a class="btn wa" id="wa" href="#" target="_blank" rel="noopener">Order on WhatsApp</a>
+          <button class="btn ghost" type="button" id="copy">Copy order</button>
+          <button class="btn ghost" type="button" id="save">Save mockup image</button>
+        </div>
+        <div class="toast" id="toast" aria-live="polite"></div>
+        <div class="saveimg" id="saveWrap" hidden><p class="note">Long-press (phone) or right-click (computer) the image to save it.</p><img id="saveImg" alt="Your GINI mockup"></div>
+        <p class="note si">WhatsApp එකේ message එක යවලා, save කරපු mockup image එකත් attach කරන්න. අපි මිල සහ delivery එක confirm කරනවා.</p>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+// ---- Shop settings -------------------------------------------------------
+const WHATSAPP = "";           // e.g. "94771234567" (country code, no +). Empty = copy-only.
+// ---- Garments: print box per size class (cm, width x max height) ---------
+const GARMENTS = {
+  tee:      {name:"Oversized tee", si:"Oversized T-shirt", box:{SM:[34,49], LXL:[38,55]}, disp:9,
+             colours:{black:"tee_black", white:"tee_white"}},
+  hoodie:   {name:"Hoodie", si:"Hoodie", box:{SM:[30,40.6], LXL:[32,43.3]}, disp:8,
+             colours:{black:"hoodie_black", white:"hoodie_white", cream:"hoodie_cream", grey:"hoodie_grey", sage:"hoodie_sage", pink:"hoodie_pink", rose:"hoodie_rose", red:"hoodie_red"}},
+  skinner:  {name:"Arm-cut (skinner)", si:"Gym arm-cut", box:{SM:[24,30], LXL:[26,32.5]}, disp:5,
+             colours:{black:"skinner_black", white:"skinner_white"}},
+  longsleeve:{name:"Long sleeve", si:"Long sleeve", box:{SM:[30,41], LXL:[34,46]}, disp:8,
+             colours:{black:"longsleeve_black"}},
+};
+const COLOURS = {black:{name:"Black",hex:"#111",group:"dark"}, white:{name:"White",hex:"#f3f1ec",group:"light"},
+  cream:{name:"Cream",hex:"#e8dcc4",group:"light"}, grey:{name:"Grey marl",hex:"#b9b9b6",group:"light"},
+  sage:{name:"Sage",hex:"#9fb08f",group:"light"}, pink:{name:"Baby pink",hex:"#f2c6cf",group:"light"},
+  rose:{name:"Dusty rose",hex:"#c98f93",group:"light"}, red:{name:"Red",hex:"#c4161c",group:"dark"}};
+// Base photo geometry (900x1205 px): centre x, print top y, px per real cm (size L garment).
+const BASES = {
+  tee_black:{cx:453,top:321,pxcm:8.4}, tee_white:{cx:450,top:318,pxcm:8.1},
+  // hoodies: top = back neck seam + 10 cm; hood = outline (left side top->tip, right side top->tip) drawn back over the print
+  hoodie_black:{cx:452,top:372,pxcm:9.2,hood:[[298,260],[305,320],[335,380],[375,425],[415,455],[450,462],[490,450],[540,420],[590,375],[620,320],[625,265]]},
+  hoodie_white:{cx:468,top:351,pxcm:9.1,hood:[[312,240],[320,320],[345,375],[385,412],[430,433],[470,441],[520,430],[565,405],[605,365],[628,310],[630,245]]},
+  hoodie_cream:{cx:472,top:355,pxcm:9.0,hood:[[315,245],[325,320],[355,375],[395,412],[430,435],[470,443],[515,435],[560,412],[605,370],[630,315],[635,245]]},
+  hoodie_grey:{cx:463,top:354,pxcm:8.9,hood:[[300,245],[315,320],[345,380],[390,425],[430,445],[460,451],[500,447],[545,425],[590,380],[620,320],[630,245]]},
+  hoodie_pink:{cx:452,top:356,pxcm:9.6,hood:[[275,240],[290,320],[325,380],[370,420],[410,442],[450,447],[495,442],[540,420],[585,380],[615,320],[625,240]]},
+  hoodie_red:{cx:472,top:356,pxcm:9.6,hood:[[305,240],[330,320],[370,380],[420,425],[465,446],[510,443],[560,420],[605,380],[635,320],[645,240]]},
+  hoodie_sage:{cx:465,top:356,pxcm:9.6,hood:[[300,240],[315,320],[350,380],[390,420],[410,442],[450,449],[500,444],[550,420],[600,380],[630,320],[640,240]]},
+  hoodie_rose:{cx:445,top:359,pxcm:9.4,hood:[[315,250],[320,330],[360,390],[410,430],[440,448],[480,442],[520,410],[550,360],[560,290],[560,230]]},
+  skinner_black:{cx:445,top:405,pxcm:8.5}, skinner_white:{cx:443,top:405,pxcm:8.5},
+  longsleeve_black:{cx:455,top:316,pxcm:9.6},
+};
+// Designs. native = garment the print file was sized for; dark/light = file + real L/XL size in cm.
+const T="tee", G="gym", H="hoodie";
+const D = [
+ ["Blue Flame Leopard","big",T,{dark:["bc01_lk_leopard_blue_flame_v2",37.2,54.9]}],
+ ["Black Leopard Fire","big",T,{dark:["bc02_black_leopard_fire_v2wide",37.8,45.9]}],
+ ["Perahera Tusker","big",T,{dark:["bc03_perahera_tusker_gold_blue_v2",37.7,54.2]}],
+ ["Ember Walk Leopard","big",T,{dark:["r01_lk_leopard_ember_walk_v1",37.9,46.6]}],
+ ["Amber Stare Leopard","big",T,{dark:["r03_lk_leopard_amber_stare_v1",37.9,46.1]}],
+ ["Fire Skull","skull",T,{dark:["r04_fire_skull_v3",38,46.5]}],
+ ["Lion of Fire & Ice","big",T,{dark:["r05_lion_fire_ice_v1",37.9,48.5]}],
+ ["Gold Skull","skull",T,{dark:["r06_gold_skull_v3",34.4,54.9]}],
+ ["Rama & Hanuman","big",T,{dark:["r07_rama_hanuman_fire_v1",37.9,49.8]}],
+ ["Fire Trishul","big",T,{dark:["r08_fire_trishul_red_cloth_v1",33.8,54.8]}],
+ ["Neon Hand","skull",T,{dark:["r09_neon_outline_hand_v2",27.3,53.9]}],
+ ["Blood Drip Spider","skull",T,{dark:["s07_blood_drip_wood_spider_black_v1",34.1,54.9], light:["s07_blood_drip_wood_spider_white_v1",37.9,53.6]}],
+ ["Blue Watercolour Lion","ink",T,{light:["bc04_lion_blue_watercolour_v2",37.9,49.1]}],
+ ["Pencil Fire Leopard","ink",T,{light:["bc09_lk_leopard_pencil_fire_v2wide",37.9,47.8]}],
+ ["Leopard Burst","ink",T,{light:["w01_lk_leopard_burst_v1",37.9,49]}],
+ ["Tusker in Red Ink","ink",T,{light:["w02_tusker_ink_red_v1",37.9,49.3]}],
+ ["Kawanthissa Tribute","ink",T,{light:["w02k_kawanthissa_tribute_v1",35,54.2]}],
+ ["Red Slash Leopard","ink",T,{light:["w03_lk_leopard_red_slash_v1",38,50.2]}],
+ ["Lion with Red Drops","ink",T,{light:["w04_lion_ink_red_drops_v1",37.9,50.4]}],
+ ["Jackal in Red Ink","ink",T,{light:["w05_lk_jackal_red_ink_v2",38,47.6]}],
+ ["Navy & Mustard Leopard","ink",T,{light:["w06_lk_leopard_navy_mustard_v4",37.9,47.2]}],
+ ["Obsession","type",T,{light:["w07_obsession_v1",17,54.8]}],
+ ["Colombo","type",T,{dark:["s02_colombo_map_type_v1_dark",37.6,14.8], light:["s02_colombo_map_type_v1_light",37.6,14.8]}],
+ ["Flame Grin","type",T,{dark:["s03_flame_scribble_grin_v1_dark",29.9,24.2], light:["s03_flame_scribble_grin_v1_light",29.9,24.2]}],
+ ["Hanging Spider","type",T,{dark:["s06_tribal_hanging_spider_v1_dark",16.8,39.8], light:["s06_tribal_hanging_spider_v1_light",16.8,39.8]}],
+ ["No Pain No Gain","gym",G,{dark:["gym01_no_pain_no_gain_dark",25.9,27.9], light:["gym01_no_pain_no_gain_light",26,28]}],
+ ["Sore Skull","gym",G,{dark:["gym03_skull_barbell_dark",21.3,32.4], light:["gym03_skull_barbell_light",21.4,32.5]}],
+ ["Beast Mode","gym",G,{dark:["gym04_beast_mode_leopard_dark",23.9,27.3], light:["gym04_beast_mode_leopard_light",23.9,27.3]}],
+ ["Leopard Skull Lightning","skull",H,{dark:["hd04_black_leopard_skull_lightning_v1",28,43.2]}],
+ ["Stencil Leopard Face","ink",H,{light:["hd01_ash_stencil_leopard_face_v1",31.9,34.7]}],
+ ["Tusker Ink Spots","ink",H,{light:["hd02_ash_tusker_ink_spots_v1",28.5,43.2]}],
+ ["Leopards in the Tree","ink",H,{light:["hd03_ash_leopards_climbing_tree_v1",18.2,43.2]}],
+ ["Earthy Swirl Leopard","ink",H,{light:["hd05_light_leopard_earthy_swirl_v1",31.9,36.7]}],
+ ["Tea Leaf Leopard","ink",H,{light:["hd07_light_leopard_torn_tea_leaves_v1",31.9,37.9]}],
+].map((d,i)=>({name:d[0],cat:d[1],native:d[2],v:d[3],code:"GN-"+String(i+1).padStart(2,"0")}));
+const NATIVE_BOX = {tee:[38,55], gym:[26,32.5], hoodie:[32,43.3]};
+const CATS = {all:"All", big:"Big cats & tuskers", skull:"Skulls & dark", ink:"Ink & watercolour", type:"Type & graphic", gym:"Gym"};
+const SIZES = ["S","M","L","XL"];
+
+const S = {g:"tee", c:"black", d:null, size:"L", qty:1, cat:"all"};
+const $ = id => document.getElementById(id);
+const cv = $("cv"), ctx = cv.getContext("2d", {willReadFrequently:true});
+
+// ---- image + base analysis cache ----------------------------------------
+const imgCache = {};
+function loadImg(src){ return imgCache[src] ||= new Promise((ok,err)=>{const i=new Image(); i.onload=()=>ok(i); i.onerror=err; i.src=src;}); }
+function blur(src,w,h,r){ // separable box blur, 2 passes ~ gaussian
+  let a=src, b=new Float32Array(w*h);
+  for(let pass=0;pass<2;pass++){
+    for(let y=0;y<h;y++){let o=y*w,s=0,n=0;
+      for(let x=-r;x<w;x++){ if(x+r<w){s+=a[o+x+r];n++;} if(x-r-1>=0){s-=a[o+x-r-1];n--;} if(x>=0)b[o+x]=s/n; }}
+    let c=new Float32Array(w*h);
+    for(let x=0;x<w;x++){let s=0,n=0;
+      for(let y=-r;y<h;y++){ if(y+r<h){s+=b[(y+r)*w+x];n++;} if(y-r-1>=0){s-=b[(y-r-1)*w+x];n--;} if(y>=0)c[y*w+x]=s/n; }}
+    a=c;
+  }
+  return a;
+}
+const baseCache = {};
+async function getBase(key){
+  if(baseCache[key]) return baseCache[key];
+  const img = await loadImg("b/"+key+".jpg");
+  const W=img.width,Hh=img.height, c=document.createElement("canvas"); c.width=W;c.height=Hh;
+  const x=c.getContext("2d"); x.drawImage(img,0,0);
+  const px=x.getImageData(0,0,W,Hh).data, L=new Float32Array(W*Hh);
+  for(let i=0;i<W*Hh;i++) L[i]=(px[i*4]*.299+px[i*4+1]*.587+px[i*4+2]*.114)/255;
+  return baseCache[key] = {img,W,H:Hh,L,Ls:blur(L,W,Hh,1),Lm:blur(L,W,Hh,4),Lb:blur(L,W,Hh,36)};
+}
+
+// ---- print size for garment + size class ---------------------------------
+function printSize(d, variant){
+  const [ ,w,h] = d.v[variant], [nw,nh] = NATIVE_BOX[d.native];
+  const cls = (S.size==="S"||S.size==="M") ? "SM" : "LXL";
+  const [tw,th] = GARMENTS[S.g].box[cls];
+  let k = Math.min(tw/nw, th/nh), W=w*k, Hc=h*k;
+  const fit = Math.min(1, tw/W, th/Hc); W*=fit; Hc*=fit;
+  return [W,Hc,cls];
+}
+
+// ---- render ---------------------------------------------------------------
+let token=0;
+async function render(){
+  const my=++token; $("busy").hidden=false;
+  const baseKey = GARMENTS[S.g].colours[S.c], geo=BASES[baseKey], group=COLOURS[S.c].group;
+  const B = await getBase(baseKey); if(my!==token) return;
+  ctx.drawImage(B.img,0,0);
+  const d=S.d;
+  if(!d || !d.v[group]){ $("busy").hidden=true; updateSpec(); return; }
+  const pimg = await loadImg("p/"+d.v[group][0]+".webp"); if(my!==token) return;
+  const [wcm,hcm] = printSize(d, group);
+  // the photo is a size L garment: scale by chest width so the print sits on the shirt in the true proportion for the chosen size
+  const CHEST={S:53.3,M:55.9,L:58.4,XL:61}, kz=CHEST.L/CHEST[S.size];
+  const bw=Math.round(wcm*geo.pxcm*kz), bh=Math.round(hcm*geo.pxcm*kz), bx=Math.round(geo.cx-bw/2);
+  let by=geo.top;
+  if(geo.hood){ const tip=Math.max(...geo.hood.map(p=>p[1])); by=Math.max(by, Math.round(tip-0.3*bh)); } // short prints drop so the hood hides at most 30%
+  const pc=document.createElement("canvas"); pc.width=bw; pc.height=bh;
+  const px=pc.getContext("2d"); px.imageSmoothingQuality="high"; px.drawImage(pimg,0,0,bw,bh);
+  const P=px.getImageData(0,0,bw,bh).data;
+  const out=ctx.getImageData(bx,by,bw,bh), O=out.data, W=B.W;
+  // local stats over the print area
+  let sum=0,sum2=0,n=0, vals=[];
+  for(let y=0;y<bh;y+=3)for(let x=0;x<bw;x+=3){const i=(by+y)*W+bx+x, v=B.Lm[i]-B.Lb[i]; sum+=v;sum2+=v*v;n++; vals.push(B.Ls[i]);}
+  const sd=Math.max(.004,Math.sqrt(sum2/n-(sum/n)**2)); vals.sort((a,b)=>a-b);
+  const white=vals[Math.floor(vals.length*.97)], meanLb=vals[Math.floor(vals.length*.5)];
+  const amp=GARMENTS[S.g].disp, light=group==="light";
+  for(let y=0;y<bh;y++)for(let x=0;x<bw;x++){
+    const i=(by+y)*W+bx+x, dsp=Math.max(-2.5,Math.min(2.5,(B.Lm[i]-B.Lb[i])/sd))*amp*.4;
+    const sx=x+dsp, sy=y+dsp; if(sx<0||sy<0||sx>=bw-1||sy>=bh-1) continue;
+    const x0=sx|0,y0=sy|0,fx=sx-x0,fy=sy-y0, j=(y0*bw+x0)*4, j2=j+bw*4;
+    const w00=(1-fx)*(1-fy),w10=fx*(1-fy),w01=(1-fx)*fy,w11=fx*fy;
+    const a=(P[j+3]*w00+P[j+7]*w10+P[j2+3]*w01+P[j2+7]*w11)/255; if(a<.01) continue;
+    let s;
+    if(light){ s=Math.min(1.08,B.Ls[i]/white); }           // multiply: folds + fabric shade the ink
+    else { s=1+(B.Ls[i]/Math.max(B.Lb[i],.02)-1)*.55; s*=Math.pow(B.Lb[i]/Math.max(meanLb,.02),.35); s=Math.max(.5,Math.min(1.35,s)); }
+    const k=(y*bw+x)*4, A=a*.96;
+    for(let c=0;c<3;c++){
+      const ink=(P[j+c]*w00+P[j+4+c]*w10+P[j2+c]*w01+P[j2+4+c]*w11)/Math.max(a,.01);
+      O[k+c]=O[k+c]*(1-A)+Math.min(255,ink*s)*A;
+    }
+  }
+  ctx.putImageData(out,bx,by);
+  if(geo.hood){ // lay the hood back over the print, with a soft 1.5 px edge
+    const hc=document.createElement("canvas"); hc.width=B.W; hc.height=B.H; const h=hc.getContext("2d");
+    h.drawImage(B.img,0,0); h.globalCompositeOperation="destination-in"; h.filter="blur(1.5px)";
+    const pts=geo.hood; h.beginPath(); h.moveTo(pts[0][0],pts[0][1]-120);
+    pts.forEach(p=>h.lineTo(p[0],p[1])); h.lineTo(pts[pts.length-1][0],pts[pts.length-1][1]-120); h.closePath(); h.fill();
+    ctx.drawImage(hc,0,0);
+  }
+  $("busy").hidden=true; updateSpec(wcm,hcm);
+  if(!$("saveWrap").hidden) $("saveImg").src=cv.toDataURL("image/jpeg",.9);
+}
+
+// ---- UI -------------------------------------------------------------------
+function chip(label,sub,pressed,on){const b=document.createElement("button");b.type="button";b.className="chip";b.setAttribute("aria-pressed",pressed);b.innerHTML=label+(sub?`<small>${sub}</small>`:"");b.onclick=on;return b;}
+function drawGarments(){const el=$("garments");el.replaceChildren(...Object.entries(GARMENTS).map(([k,g])=>chip(g.name,g.si,S.g===k,()=>{S.g=k; if(!g.colours[S.c]) S.c=Object.keys(g.colours)[0]; refresh();})));}
+function drawColours(){const el=$("colours");el.replaceChildren(...Object.keys(GARMENTS[S.g].colours).map(c=>{const b=document.createElement("button");b.type="button";b.className="sw";b.style.background=COLOURS[c].hex;b.title=COLOURS[c].name;b.setAttribute("aria-label",COLOURS[c].name);b.setAttribute("aria-pressed",S.c===c);b.onclick=()=>{S.c=c;refresh();};return b;}));$("colourName").textContent=COLOURS[S.c].name+(Object.keys(GARMENTS[S.g].colours).length<2?" (more colours soon)":"");}
+function available(){const g=COLOURS[S.c].group;return D.filter(d=>d.v[g]);}
+function drawPrints(){
+  const g=COLOURS[S.c].group, list=available();
+  const cats=["all",...Object.keys(CATS).filter(c=>c!=="all"&&list.some(d=>d.cat===c))];
+  if(!cats.includes(S.cat)) S.cat="all";
+  $("filter").replaceChildren(...cats.map(c=>chip(CATS[c],"",S.cat===c,()=>{S.cat=c;drawPrints();})));
+  if(!S.d||!S.d.v[g]) S.d = (S.g==="skinner"?list.find(d=>d.cat==="gym"):null) || list[0];
+  $("prints").replaceChildren(...list.filter(d=>S.cat==="all"||d.cat===S.cat).map(d=>{
+    const b=document.createElement("button");b.type="button";b.className="pc";b.setAttribute("aria-pressed",S.d===d);
+    b.innerHTML=`<div class="th ${g}"><img loading="lazy" src="t/${d.v[g][0]}.webp" alt=""></div><div class="cd">${d.code}</div><div class="nm">${d.name}</div>`;
+    b.onclick=()=>{S.d=d;drawPrints();render();updateMsg();};return b;}));
+}
+function drawSizes(){$("sizes").replaceChildren(...SIZES.map(z=>chip(z,"",S.size===z,()=>{S.size=z;drawSizes();render();updateMsg();})));
+  $("sizeNote").textContent=(S.size==="S"||S.size==="M")?"S and M get a smaller print (34 cm on a tee), so it covers the same share of the back as on L.":"L and XL get the full-size print (38 cm on a tee).";}
+function updateSpec(wcm,hcm){
+  const g=GARMENTS[S.g];
+  $("spec").innerHTML = S.d&&wcm ? `<span>Print <b>${wcm.toFixed(1)} × ${hcm.toFixed(1)} cm</b></span><span>Size <b>${S.size}</b></span><span>${g.name}, ${COLOURS[S.c].name.toLowerCase()}</span><span class="hint">Shown in true proportion for size ${S.size}</span>` : "";
+  updateMsg(wcm,hcm);
+}
+let lastSize=[0,0];
+function updateMsg(wcm,hcm){
+  if(wcm) lastSize=[wcm,hcm];
+  const g=GARMENTS[S.g], d=S.d, nm=$("nm").value.trim(), city=$("city").value.trim();
+  const lines=["GINI order",`Garment: ${g.name} (${COLOURS[S.c].name})`,`Size: ${S.size}`,
+    d?`Design: ${d.code} ${d.name}`:"Design: -", d?`Back print: ${lastSize[0].toFixed(1)} x ${lastSize[1].toFixed(1)} cm`:"",
+    `Quantity: ${S.qty}`, nm?`Name: ${nm}`:"", city?`City: ${city}`:""].filter(Boolean);
+  const text=lines.join("\n"); $("msg").textContent=text;
+  const wa=$("wa");
+  if(WHATSAPP){ wa.href="https://wa.me/"+WHATSAPP+"?text="+encodeURIComponent(text); wa.removeAttribute("aria-disabled"); }
+  else { wa.href="https://wa.me/?text="+encodeURIComponent(text); }
+  return text;
+}
+function refresh(){drawGarments();drawColours();drawPrints();drawSizes();render();updateMsg();}
+$("qm").onclick=()=>{S.qty=Math.max(1,S.qty-1);$("qv").textContent=S.qty;updateMsg();};
+$("qp").onclick=()=>{S.qty=Math.min(20,S.qty+1);$("qv").textContent=S.qty;updateMsg();};
+$("nm").oninput=$("city").oninput=()=>updateMsg();
+$("copy").onclick=()=>{const t=updateMsg();navigator.clipboard?.writeText(t).then(()=>$("toast").textContent="Order copied. Paste it in WhatsApp.",()=>{const r=document.createRange();r.selectNodeContents($("msg"));getSelection().removeAllRanges();getSelection().addRange(r);$("toast").textContent="Text selected. Copy it with your keyboard or long-press.";});};
+$("save").onclick=()=>{$("saveWrap").hidden=false;$("saveImg").src=cv.toDataURL("image/jpeg",.9);$("saveWrap").scrollIntoView({behavior:"smooth",block:"nearest"});};
+S.d=D.find(d=>d.name==="Fire Skull");
+refresh();
+</script>
+
+</html>
