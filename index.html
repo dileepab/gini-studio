@@ -206,15 +206,23 @@ const D = [
  ["No Pain No Gain","gym",G,{dark:["gym01_no_pain_no_gain_dark",25.9,27.9], light:["gym01_no_pain_no_gain_light",26.0,28.0]}],
  ["Sore Skull","gym",G,{dark:["gym03_skull_barbell_dark",21.3,32.4], light:["gym03_skull_barbell_light",21.4,32.5]}],
  ["Beast Mode","gym",G,{dark:["gym04_beast_mode_leopard_dark",23.9,27.3], light:["gym04_beast_mode_leopard_light",23.9,27.3]}],
- ["Leopard Skull Lightning","skull",H,{dark:["hd04_black_leopard_skull_lightning_v1",28.0,43.2]}],
- ["Stencil Leopard Face","ink",H,{light:["hd01_ash_stencil_leopard_face_v1",31.9,34.7]}],
- ["Tusker Ink Spots","ink",H,{light:["hd02_ash_tusker_ink_spots_v1",28.5,43.2]}],
- ["Leopards in the Tree","ink",H,{light:["hd03_ash_leopards_climbing_tree_v1",18.2,43.2]}],
- ["Earthy Swirl Leopard","ink",H,{light:["hd05_light_leopard_earthy_swirl_v1",31.9,36.7]}],
- ["Tea Leaf Leopard","ink",H,{light:["hd07_light_leopard_torn_tea_leaves_v1",31.9,37.9]}],
+ // hoodie colour sets (Drop 01): keyed by exact base, so each print shows only on the hoodie colour it was approved for
+ ["Leopard Skull Lightning","hood",H,{hoodie_red:["hs_hd04_red",28.0,43.2], hoodie_black:["hs_hd04_black",28.0,43.2]}],
+ ["Hawk Eagle Wings","hood",H,{hoodie_black:["hs_hd16_black",30.6,43.2]}],
+ ["Thorn Wings","hood",H,{hoodie_red:["hs_hd08_red",31.9,38.8], hoodie_black:["hs_hd08_black",31.9,38.8]}],
+ ["Tribal Tusker","hood",H,{hoodie_red:["hs_hd09_red",31.9,38.5], hoodie_black:["hs_hd09_black",31.9,38.5], hoodie_cream:["hs_hd09_cream",31.9,38.5], hoodie_white:["hs_hd09_white",31.9,38.5]}],
+ ["Stencil Leopard Face","hood",H,{hoodie_grey:["hs_hd01_grey",31.9,34.7], hoodie_white:["hs_hd01_white",31.9,34.7], hoodie_rose:["hs_hd01_rose",31.9,34.7]}],
+ ["Tusker Ink Spots","hood",H,{hoodie_grey:["hs_hd02_grey",28.5,43.2], hoodie_sage:["hs_hd02_sage",28.5,43.2], hoodie_pink:["hs_hd02_pink",28.5,43.2]}],
+ ["Leopards in the Tree","hood",H,{hoodie_grey:["hs_hd03_grey",18.2,43.2]}],
+ ["Ink Brush Leopard","hood",H,{hoodie_grey:["hs_hd10_grey",31.9,40.3], hoodie_sage:["hs_hd10_sage",31.9,40.3], hoodie_pink:["hs_hd10_pink",31.9,40.3], hoodie_rose:["hs_hd10_rose",31.9,40.3]}],
+ ["Leopard Skeleton Flames","hood",H,{hoodie_grey:["hs_hd13_grey",31.0,43.2]}],
+ ["Blade Tribal","hood",H,{hoodie_red:["hs_hd12_red",16.5,43.2], hoodie_sage:["hs_hd12_sage",16.5,43.2], hoodie_pink:["hs_hd12_pink",16.5,43.2], hoodie_rose:["hs_hd12_rose",16.5,43.2]}],
+ ["Walking Tusker Ink","hood",H,{hoodie_cream:["hs_hd06_cream",31.9,26.8]}],
+ ["Leopard & Na Flowers","hood",H,{hoodie_cream:["hs_hd15_cream",28.0,43.2]}],
+ ["Blue Whale Ink","hood",H,{hoodie_white:["hs_hd14_white",19.4,43.2]}],
 ].map((d,i)=>({name:d[0],cat:d[1],native:d[2],v:d[3],code:"GN-"+String(i+1).padStart(2,"0")}));
 const NATIVE_BOX = {tee:[38,55], gym:[26,32.5], hoodie:[32,43.3]};
-const CATS = {all:"All", big:"Big cats & tuskers", skull:"Skulls & dark", ink:"Ink & watercolour", type:"Type & graphic", gym:"Gym"};
+const CATS = {all:"All", hood:"Hoodie collection", big:"Big cats & tuskers", skull:"Skulls & dark", ink:"Ink & watercolour", type:"Type & graphic", gym:"Gym"};
 const SIZES = ["S","M","L","XL"];
 
 const S = {g:"tee", c:"black", d:null, size:"L", qty:1, cat:"all"};
@@ -265,9 +273,10 @@ async function render(){
   const B = await getBase(baseKey); if(my!==token) return;
   ctx.drawImage(B.img,0,0);
   const d=S.d;
-  if(!d || !d.v[group]){ $("busy").hidden=true; updateSpec(); return; }
-  const pimg = await loadImg("p/"+d.v[group][0]+".webp"); if(my!==token) return;
-  const [wcm,hcm] = printSize(d, group);
+  const vkey=vk(d);
+  if(!vkey){ $("busy").hidden=true; updateSpec(); return; }
+  const pimg = await loadImg("p/"+d.v[vkey][0]+".webp"); if(my!==token) return;
+  const [wcm,hcm] = printSize(d, vkey);
   // the photo is a size L garment: scale by chest width so the print sits on the shirt in the true proportion for the chosen size
   const CHEST={S:53.3,M:55.9,L:58.4,XL:61}, kz=CHEST.L/CHEST[S.size];
   const bw=Math.round(wcm*geo.pxcm*kz), bh=Math.round(hcm*geo.pxcm*kz), bx=Math.round(geo.cx-bw/2);
@@ -314,16 +323,17 @@ async function render(){
 function chip(label,sub,pressed,on){const b=document.createElement("button");b.type="button";b.className="chip";b.setAttribute("aria-pressed",pressed);b.innerHTML=label+(sub?`<small>${sub}</small>`:"");b.onclick=on;return b;}
 function drawGarments(){const el=$("garments");el.replaceChildren(...Object.entries(GARMENTS).map(([k,g])=>chip(g.name,g.si,S.g===k,()=>{S.g=k; if(!g.colours[S.c]) S.c=Object.keys(g.colours)[0]; refresh();})));}
 function drawColours(){const el=$("colours");el.replaceChildren(...Object.keys(GARMENTS[S.g].colours).map(c=>{const b=document.createElement("button");b.type="button";b.className="sw";b.style.background=COLOURS[c].hex;b.title=COLOURS[c].name;b.setAttribute("aria-label",COLOURS[c].name);b.setAttribute("aria-pressed",S.c===c);b.onclick=()=>{S.c=c;refresh();};return b;}));$("colourName").textContent=COLOURS[S.c].name+(Object.keys(GARMENTS[S.g].colours).length<2?" (more colours soon)":"");}
-function available(){const g=COLOURS[S.c].group;return D.filter(d=>d.v[g]);}
+function vk(d){const bk=GARMENTS[S.g].colours[S.c], g=COLOURS[S.c].group; return d&&(d.v[bk]?bk:(d.v[g]?g:null));}
+function available(){const l=D.filter(d=>vk(d)); return S.g==="hoodie"?[...l.filter(d=>d.cat==="hood"),...l.filter(d=>d.cat!=="hood")]:l;}
 function drawPrints(){
   const g=COLOURS[S.c].group, list=available();
   const cats=["all",...Object.keys(CATS).filter(c=>c!=="all"&&list.some(d=>d.cat===c))];
   if(!cats.includes(S.cat)) S.cat="all";
   $("filter").replaceChildren(...cats.map(c=>chip(CATS[c],"",S.cat===c,()=>{S.cat=c;drawPrints();})));
-  if(!S.d||!S.d.v[g]) S.d = (S.g==="skinner"?list.find(d=>d.cat==="gym"):null) || list[0];
+  if(!S.d||!vk(S.d)) S.d = (S.g==="skinner"?list.find(d=>d.cat==="gym"):null) || list[0];
   $("prints").replaceChildren(...list.filter(d=>S.cat==="all"||d.cat===S.cat).map(d=>{
     const b=document.createElement("button");b.type="button";b.className="pc";b.setAttribute("aria-pressed",S.d===d);
-    b.innerHTML=`<div class="th ${g}"><img loading="lazy" src="t/${d.v[g][0]}.webp" alt=""></div><div class="cd">${d.code}</div><div class="nm">${d.name}</div>`;
+    b.innerHTML=`<div class="th ${g}"${d.cat==="hood"?` style="background:${COLOURS[S.c].hex}"`:""}><img loading="lazy" src="t/${d.v[vk(d)][0]}.webp" alt=""></div><div class="cd">${d.code}</div><div class="nm">${d.name}</div>`;
     b.onclick=()=>{S.d=d;drawPrints();render();updateMsg();};return b;}));
 }
 function drawSizes(){$("sizes").replaceChildren(...SIZES.map(z=>chip(z,"",S.size===z,()=>{S.size=z;drawSizes();render();updateMsg();})));
@@ -355,5 +365,4 @@ $("save").onclick=()=>{$("saveWrap").hidden=false;$("saveImg").src=cv.toDataURL(
 S.d=D.find(d=>d.name==="Fire Skull");
 refresh();
 </script>
-
 </html>
