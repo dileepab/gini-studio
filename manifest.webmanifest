@@ -1,0 +1,16 @@
+{
+  "name": "GINI Custom Studio",
+  "short_name": "GINI Studio",
+  "description": "Design your own GINI tee, hoodie, long sleeve or arm-cut and order on WhatsApp.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#151211",
+  "theme_color": "#151211",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

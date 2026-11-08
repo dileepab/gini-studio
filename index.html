@@ -3,6 +3,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Design your own GINI tee, hoodie or arm-cut. Pick a colour and print, see it live, order on WhatsApp.">
 <style>*,*::before,*::after{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#151211">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GINI Studio">
 <title>GINI Custom Studio</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -164,13 +172,13 @@ const BASES = {
   tee_black:{cx:453,top:321,pxcm:8.4}, tee_white:{cx:450,top:318,pxcm:8.1},
   // hoodies: top = back neck seam + 10 cm; hood = outline (left side top->tip, right side top->tip) drawn back over the print
   hoodie_black:{cx:452,top:372,pxcm:9.2,hood:[[298,260],[305,320],[335,380],[375,425],[415,455],[450,462],[490,450],[540,420],[590,375],[620,320],[625,265]]},
-  hoodie_white:{cx:468,top:351,pxcm:9.1,hood:[[312,240],[320,320],[345,375],[385,412],[430,433],[470,441],[520,430],[565,405],[605,365],[628,310],[630,245]]},
-  hoodie_cream:{cx:472,top:355,pxcm:9.0,hood:[[315,245],[325,320],[355,375],[395,412],[430,435],[470,443],[515,435],[560,412],[605,370],[630,315],[635,245]]},
-  hoodie_grey:{cx:463,top:354,pxcm:8.9,hood:[[300,245],[315,320],[345,380],[390,425],[430,445],[460,451],[500,447],[545,425],[590,380],[620,320],[630,245]]},
-  hoodie_pink:{cx:452,top:356,pxcm:9.6,hood:[[275,240],[290,320],[325,380],[370,420],[410,442],[450,447],[495,442],[540,420],[585,380],[615,320],[625,240]]},
-  hoodie_red:{cx:472,top:356,pxcm:9.6,hood:[[305,240],[330,320],[370,380],[420,425],[465,446],[510,443],[560,420],[605,380],[635,320],[645,240]]},
-  hoodie_sage:{cx:465,top:356,pxcm:9.6,hood:[[300,240],[315,320],[350,380],[390,420],[410,442],[450,449],[500,444],[550,420],[600,380],[630,320],[640,240]]},
-  hoodie_rose:{cx:445,top:359,pxcm:9.4,hood:[[315,250],[320,330],[360,390],[410,430],[440,448],[480,442],[520,410],[550,360],[560,290],[560,230]]},
+  hoodie_white:{cx:461,top:344,pxcm:9.9,hood:[[312,240],[320,320],[345,375],[385,412],[430,433],[470,441],[520,430],[565,405],[605,365],[628,310],[630,245]]},
+  hoodie_cream:{cx:457,top:347,pxcm:9.85,hood:[[315,245],[325,320],[355,375],[395,412],[430,435],[470,443],[515,435],[560,412],[605,370],[630,315],[635,245]]},
+  hoodie_grey:{cx:462,top:352,pxcm:10.07,hood:[[300,245],[315,320],[345,380],[390,425],[430,445],[460,451],[500,447],[545,425],[590,380],[620,320],[630,245]]},
+  hoodie_pink:{cx:460,top:349,pxcm:10.04,hood:[[275,240],[290,320],[325,380],[370,420],[410,442],[450,447],[495,442],[540,420],[585,380],[615,320],[625,240]]},
+  hoodie_red:{cx:470,top:350,pxcm:9.84,hood:[[305,240],[330,320],[370,380],[420,425],[465,446],[510,443],[560,420],[605,380],[635,320],[645,240]]},
+  hoodie_sage:{cx:458,top:358,pxcm:9.31,hood:[[300,240],[315,320],[350,380],[390,420],[410,442],[450,449],[500,444],[550,420],[600,380],[630,320],[640,240]]},
+  hoodie_rose:{cx:480,top:356,pxcm:9.37,hood:[[315,250],[320,330],[360,390],[410,430],[440,452],[480,455],[520,435],[560,400],[600,355],[625,305],[640,250]]},
   skinner_black:{cx:445,top:405,pxcm:8.5}, skinner_white:{cx:443,top:405,pxcm:8.5},
   longsleeve_black:{cx:455,top:316,pxcm:9.6},
   longsleeve_white:{cx:452,top:304,pxcm:8.8},
@@ -281,7 +289,11 @@ async function render(){
   const CHEST={S:53.3,M:55.9,L:58.4,XL:61}, kz=CHEST.L/CHEST[S.size];
   const bw=Math.round(wcm*geo.pxcm*kz), bh=Math.round(hcm*geo.pxcm*kz), bx=Math.round(geo.cx-bw/2);
   let by=geo.top;
-  if(geo.hood){ const tip=Math.max(...geo.hood.map(p=>p[1])); by=Math.max(by, Math.round(tip-0.3*bh)); } // short prints drop so the hood hides at most 30%
+  const boxH=GARMENTS[S.g].box[(S.size==="S"||S.size==="M")?"SM":"LXL"][1], shortP=hcm<0.5*boxH, cm=geo.pxcm*kz;
+  if(geo.hood){ const tip=Math.max(...geo.hood.map(p=>p[1]));
+    by = shortP ? Math.max(by, Math.round(tip+1.5*cm))   // short/wide prints (e.g. Colombo) sit fully below the hood
+                : Math.max(by, Math.round(tip-0.3*bh)); } // tall prints: the hood hides at most 30%
+  else if(shortP){ by=Math.round(by+(0.5*boxH-hcm)*0.35*cm); } // short prints drop a little so they sit on the upper back, not on the collar
   const pc=document.createElement("canvas"); pc.width=bw; pc.height=bh;
   const px=pc.getContext("2d"); px.imageSmoothingQuality="high"; px.drawImage(pimg,0,0,bw,bh);
   const P=px.getImageData(0,0,bw,bh).data;
@@ -365,4 +377,5 @@ $("save").onclick=()=>{$("saveWrap").hidden=false;$("saveImg").src=cv.toDataURL(
 S.d=D.find(d=>d.name==="Fire Skull");
 refresh();
 </script>
+<script>if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </html>
