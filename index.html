@@ -58,7 +58,7 @@ header.top{display:flex;align-items:baseline;justify-content:space-between;gap:1
 .pc .nm{font-size:12px;line-height:1.25}
 .pc .cd{font-size:10px;letter-spacing:.1em;color:var(--smoke);font-variant-numeric:tabular-nums}
 .pc[aria-pressed="true"]{border-color:var(--ember);box-shadow:inset 0 0 0 1px var(--ember)}
-.th.dark{background:#141414}.th.light{background:#eeeae4}
+.th.dark{background:#141414}.th.light{background:#eeeae4}.th.red{background:#b3151a}
 .filter{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .filter .chip{padding:5px 10px;font-size:12px}
 .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
@@ -108,7 +108,7 @@ input.t:focus,.chip:focus-visible,.pc:focus-visible,.sw:focus-visible,.btn:focus
         <h2><i>03</i>Design <span class="si">Print එක</span></h2>
         <div class="filter" id="filter"></div>
         <div class="prints" id="prints"></div>
-        <p class="note">Every design here is made for this shirt colour, so the ink reads well on it.</p>
+        <p class="note" id="designNote">Every design here is made for this shirt colour, so the ink reads well on it.</p>
       </div>
       <div class="step">
         <h2><i>04</i>Size <span class="si">ප්‍රමාණය</span></h2>
@@ -158,7 +158,7 @@ const GARMENTS = {
 const COLOURS = {black:{name:"Black",hex:"#111",group:"dark"}, white:{name:"White",hex:"#f3f1ec",group:"light"},
   cream:{name:"Cream",hex:"#e8dcc4",group:"light"}, grey:{name:"Grey marl",hex:"#b9b9b6",group:"light"},
   sage:{name:"Sage",hex:"#9fb08f",group:"light"}, pink:{name:"Baby pink",hex:"#f2c6cf",group:"light"},
-  rose:{name:"Dusty rose",hex:"#c98f93",group:"light"}, red:{name:"Red",hex:"#c4161c",group:"dark"}};
+  rose:{name:"Dusty rose",hex:"#c98f93",group:"light"}, red:{name:"Red",hex:"#c4161c",group:"red"}};
 // Base photo geometry (900x1205 px): centre x, print top y, px per real cm (size L garment).
 const BASES = {
   tee_black:{cx:453,top:321,pxcm:8.4}, tee_white:{cx:450,top:318,pxcm:8.1},
@@ -200,9 +200,9 @@ const D = [
  ["Jackal in Red Ink","ink",T,{light:["w05_lk_jackal_red_ink_v2",37.9,47.6]}],
  ["Navy & Mustard Leopard","ink",T,{light:["w06_lk_leopard_navy_mustard_v4",37.9,47.2]}],
  ["Obsession","type",T,{light:["w07_obsession_v1",17.0,54.8]}],
- ["Colombo","type",T,{dark:["s02_colombo_map_type_v1_dark",37.6,14.8], light:["s02_colombo_map_type_v1_light",37.6,14.8]}],
- ["Flame Grin","type",T,{dark:["s03_flame_scribble_grin_v1_dark",29.9,24.2], light:["s03_flame_scribble_grin_v1_light",29.9,24.2]}],
- ["Hanging Spider","type",T,{dark:["s06_tribal_hanging_spider_v1_dark",16.8,39.8], light:["s06_tribal_hanging_spider_v1_light",16.8,39.8]}],
+ ["Colombo","type",T,{dark:["s02_colombo_map_type_v1_dark",37.6,14.8], red:["s02_colombo_map_type_v1_dark",37.6,14.8], light:["s02_colombo_map_type_v1_light",37.6,14.8]}],
+ ["Flame Grin","type",T,{dark:["s03_flame_scribble_grin_v1_dark",29.9,24.2], red:["s03_flame_scribble_grin_v1_dark",29.9,24.2], light:["s03_flame_scribble_grin_v1_light",29.9,24.2]}],
+ ["Hanging Spider","type",T,{dark:["s06_tribal_hanging_spider_v1_dark",16.8,39.8], red:["s06_tribal_hanging_spider_v1_dark",16.8,39.8], light:["s06_tribal_hanging_spider_v1_light",16.8,39.8]}],
  ["No Pain No Gain","gym",G,{dark:["gym01_no_pain_no_gain_dark",25.9,27.9], light:["gym01_no_pain_no_gain_light",26.0,28.0]}],
  ["Sore Skull","gym",G,{dark:["gym03_skull_barbell_dark",21.3,32.4], light:["gym03_skull_barbell_light",21.4,32.5]}],
  ["Beast Mode","gym",G,{dark:["gym04_beast_mode_leopard_dark",23.9,27.3], light:["gym04_beast_mode_leopard_light",23.9,27.3]}],
