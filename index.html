@@ -228,9 +228,17 @@ const D = [
  ["Walking Tusker Ink","hood",H,{hoodie_cream:["hs_hd06_cream",31.9,26.8]}],
  ["Leopard & Na Flowers","hood",H,{hoodie_cream:["hs_hd15_cream",28.0,43.2]}],
  ["Blue Whale Ink","hood",H,{hoodie_white:["hs_hd14_white",19.4,43.2]}],
+ // Drop glow 2026-11-10 (black garments, halftone files)
+ ["Water Hooded","glow",T,{dark:["gl01_water_hooded_pointing_v1",37.9,47.1]}],
+ ["Gold Spark B-Boy","glow",T,{dark:["gl02_breakdancer_gold_sparks_v2",37.9,49.0]}],
+ ["Wheelie Water Spray","glow",T,{dark:["gl03_wheelie_water_spray_v1",37.9,36.5]}],
+ ["Blue Smoke Rider","glow",H,{dark:["gl04_helmet_rider_skull_guard_blue_smoke_v1",31.9,40.6]}],
+ ["Gold Neon Bike","glow",G,{dark:["gl05_gold_neon_line_bike_vertical_v1",23.2,32.1]}],
+ ["Lightning Leopard Rider","glow",T,{dark:["gl06_lightning_leopard_over_bike_v1",37.9,44.5]}],
+ ["Smoke Tusker Rider","glow",H,{dark:["gl07_smoke_tusker_behind_rider_v2",31.9,36.8]}],
 ].map((d,i)=>({name:d[0],cat:d[1],native:d[2],v:d[3],code:"GN-"+String(i+1).padStart(2,"0")}));
 const NATIVE_BOX = {tee:[38,55], gym:[26,32.5], hoodie:[32,43.3]};
-const CATS = {all:"All", hood:"Hoodie collection", big:"Big cats & tuskers", skull:"Skulls & dark", ink:"Ink & watercolour", type:"Type & graphic", gym:"Gym"};
+const CATS = {all:"All", glow:"Glow & riders", hood:"Hoodie collection", big:"Big cats & tuskers", skull:"Skulls & dark", ink:"Ink & watercolour", type:"Type & graphic", gym:"Gym"};
 const SIZES = ["S","M","L","XL"];
 
 const S = {g:"tee", c:"black", d:null, size:"L", qty:1, cat:"all"};
