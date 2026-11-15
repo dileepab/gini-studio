@@ -1,0 +1,28 @@
+{
+  "appId": "lk.gini.studio",
+  "appName": "GINI Studio",
+  "webDir": "www",
+  "backgroundColor": "#151211",
+  "android": {
+    "allowMixedContent": false
+  },
+  "ios": {
+    "contentInset": "never"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 3000,
+      "launchAutoHide": false,
+      "backgroundColor": "#111111",
+      "showSpinner": false,
+      "androidScaleType": "CENTER_CROP",
+      "splashFullScreen": false,
+      "splashImmersive": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#151211",
+      "overlaysWebView": false
+    }
+  }
+}

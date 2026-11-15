@@ -1,0 +1,44 @@
+# Builds the GINI Studio Android app on GitHub (free), so no Android Studio is needed.
+# Output (Actions tab > this run > Artifacts):
+#   gini-studio-debug-apk   -> install on any Android phone to test
+#   gini-studio-release-aab -> upload to Google Play (signed only when the 4 secrets below are set)
+# Secrets (Settings > Secrets and variables > Actions): ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD,
+#   ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD. Steps in app/APP_GUIDE_SI.md.
+name: Android app
+on:
+  workflow_dispatch:
+  push:
+    paths: ["app/**", "index.html", "b/**", "p/**", "t/**", ".github/workflows/android-app.yml"]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: app } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: app/package-lock.json }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - run: npm ci
+      - run: npm run web && npx cap sync android
+      - name: Signing key (if secrets are set)
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KS" ]; then
+            echo "$KS" | base64 -d > android/app/gini-upload.jks
+            printf 'storeFile=gini-upload.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' "$KS_PASS" "$KEY_ALIAS" "$KEY_PASS" > android/keystore.properties
+            echo "Release will be signed."
+          else
+            echo "No signing secrets: release AAB will be UNSIGNED (fine for testing, not for Play upload)."
+          fi
+      - name: Build
+        working-directory: app/android
+        run: chmod +x gradlew && ./gradlew --no-daemon assembleDebug bundleRelease
+      - uses: actions/upload-artifact@v4
+        with: { name: gini-studio-debug-apk, path: app/android/app/build/outputs/apk/debug/*.apk }
+      - uses: actions/upload-artifact@v4
+        with: { name: gini-studio-release-aab, path: app/android/app/build/outputs/bundle/release/*.aab }
