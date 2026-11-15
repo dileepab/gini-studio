@@ -76,6 +76,12 @@ input.t:focus,.chip:focus-visible,.pc:focus-visible,.sw:focus-visible,.btn:focus
 .qty{display:flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:4px;width:max-content}
 .qty button{background:var(--char);color:var(--bone);border:0;width:40px;height:40px;font-size:18px;cursor:pointer}
 .qty output{min-width:40px;text-align:center;font-variant-numeric:tabular-nums}
+.fabric{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.price{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.price .amt{font-family:var(--display,inherit);font-size:30px;font-weight:900;color:var(--ember);font-variant-numeric:tabular-nums;line-height:1}
+.price .each{font-size:13px;color:var(--smoke)}
+.perks{margin:0;padding:0;list-style:none;display:grid;gap:4px;font-size:13px}
+.perks li::before{content:"✓ ";color:var(--ok);font-weight:600}
 .summary{background:var(--char);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:12px}
 .summary pre{margin:0;white-space:pre-wrap;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--bone);user-select:all;overflow-wrap:anywhere}
 .actions{display:flex;flex-wrap:wrap;gap:10px}
@@ -106,6 +112,7 @@ input.t:focus,.chip:focus-visible,.pc:focus-visible,.sw:focus-visible,.btn:focus
       <div class="step">
         <h2><i>01</i>Garment <span class="si">ඇඳුම</span></h2>
         <div class="chips" id="garments"></div>
+        <div class="fabric" id="fabric" hidden></div>
       </div>
       <div class="step">
         <h2><i>02</i>Colour <span class="si">පාට</span></h2>
@@ -135,6 +142,8 @@ input.t:focus,.chip:focus-visible,.pc:focus-visible,.sw:focus-visible,.btn:focus
         </div>
       </div>
       <div class="summary">
+        <div class="price"><span class="amt" id="total">Rs 0</span><span class="each" id="each"></span></div>
+        <ul class="perks"><li>Free island-wide delivery <span class="si">(මුළු ලංකාවටම free delivery)</span></li><li>Size exchange only. Customer pays the return courier. <span class="si">(Size මාරු කරන්න විතරයි, ආපහු එවන courier ගාස්තුව ඔබ ගෙවන්න.)</span></li></ul>
         <pre id="msg"></pre>
         <div class="actions">
           <a class="btn wa" id="wa" href="#" target="_blank" rel="noopener">Order on WhatsApp</a>
@@ -143,7 +152,7 @@ input.t:focus,.chip:focus-visible,.pc:focus-visible,.sw:focus-visible,.btn:focus
         </div>
         <div class="toast" id="toast" aria-live="polite"></div>
         <div class="saveimg" id="saveWrap" hidden><p class="note">Long-press (phone) or right-click (computer) the image to save it.</p><img id="saveImg" alt="Your GINI mockup"></div>
-        <p class="note si">WhatsApp එකේ message එක යවලා, save කරපු mockup image එකත් attach කරන්න. අපි මිල සහ delivery එක confirm කරනවා.</p>
+        <p class="note si">WhatsApp එකේ message එක යවලා, save කරපු mockup image එකත් attach කරන්න. අපි order එක confirm කරලා ඔබට කතා කරනවා.</p>
       </div>
     </section>
   </div>
@@ -153,6 +162,12 @@ input.t:focus,.chip:focus-visible,.pc:focus-visible,.sw:focus-visible,.btn:focus
 // ---- Shop settings -------------------------------------------------------
 const WHATSAPP = "94702010070";         // e.g. "94771234567" (country code, no +). Empty = copy-only.
 // ---- Garments: print box per size class (cm, width x max height) ---------
+// Prices in LKR, free island-wide delivery included (Dileepa, 2026-11-15)
+const PRICES = {tee:{"220":2390,"250":2690}, hoodie:3490, skinner:1890, longsleeve:2590};
+const FABRICS = {"220":"220 gsm", "250":"250 gsm premium"};
+const rs = n => "Rs "+n.toLocaleString("en-US");
+function unitPrice(){const p=PRICES[S.g]; return typeof p==="object"?p[S.gsm]:p;}
+function fromPrice(k){const p=PRICES[k]; return typeof p==="object"?Math.min(...Object.values(p)):p;}
 const GARMENTS = {
   tee:      {name:"Oversized tee", si:"Oversized T-shirt", box:{SM:[34,49], LXL:[38,55]}, disp:9,
              colours:{black:"tee_black", white:"tee_white"}},
@@ -241,7 +256,7 @@ const NATIVE_BOX = {tee:[38,55], gym:[26,32.5], hoodie:[32,43.3]};
 const CATS = {all:"All", glow:"Glow & riders", hood:"Hoodie collection", big:"Big cats & tuskers", skull:"Skulls & dark", ink:"Ink & watercolour", type:"Type & graphic", gym:"Gym"};
 const SIZES = ["S","M","L","XL"];
 
-const S = {g:"tee", c:"black", d:null, size:"L", qty:1, cat:"all"};
+const S = {g:"tee", c:"black", d:null, size:"L", qty:1, cat:"all", gsm:"220"};
 const $ = id => document.getElementById(id);
 const cv = $("cv"), ctx = cv.getContext("2d", {willReadFrequently:true});
 
@@ -341,7 +356,7 @@ async function render(){
 
 // ---- UI -------------------------------------------------------------------
 function chip(label,sub,pressed,on){const b=document.createElement("button");b.type="button";b.className="chip";b.setAttribute("aria-pressed",pressed);b.innerHTML=label+(sub?`<small>${sub}</small>`:"");b.onclick=on;return b;}
-function drawGarments(){const el=$("garments");el.replaceChildren(...Object.entries(GARMENTS).map(([k,g])=>chip(g.name,g.si,S.g===k,()=>{S.g=k; if(!g.colours[S.c]) S.c=Object.keys(g.colours)[0]; refresh();})));}
+function drawGarments(){const el=$("garments");el.replaceChildren(...Object.entries(GARMENTS).map(([k,g])=>chip(g.name,(typeof PRICES[k]==="object"?"from ":"")+rs(fromPrice(k)),S.g===k,()=>{S.g=k; if(!g.colours[S.c]) S.c=Object.keys(g.colours)[0]; refresh();})));}
 function drawColours(){const el=$("colours");el.replaceChildren(...Object.keys(GARMENTS[S.g].colours).map(c=>{const b=document.createElement("button");b.type="button";b.className="sw";b.style.background=COLOURS[c].hex;b.title=COLOURS[c].name;b.setAttribute("aria-label",COLOURS[c].name);b.setAttribute("aria-pressed",S.c===c);b.onclick=()=>{S.c=c;refresh();};return b;}));$("colourName").textContent=COLOURS[S.c].name+(Object.keys(GARMENTS[S.g].colours).length<2?" (more colours soon)":"");}
 function vk(d){const bk=GARMENTS[S.g].colours[S.c], g=COLOURS[S.c].group; return d&&(d.v[bk]?bk:(d.v[g]?g:null));}
 function available(){const l=D.filter(d=>vk(d)); return S.g==="hoodie"?[...l.filter(d=>d.cat==="hood"),...l.filter(d=>d.cat!=="hood")]:l;}
@@ -360,23 +375,27 @@ function drawSizes(){$("sizes").replaceChildren(...SIZES.map(z=>chip(z,"",S.size
   $("sizeNote").textContent=(S.size==="S"||S.size==="M")?"S and M get a smaller print (34 cm on a tee), so it covers the same share of the back as on L.":"L and XL get the full-size print (38 cm on a tee).";}
 function updateSpec(wcm,hcm){
   const g=GARMENTS[S.g];
-  $("spec").innerHTML = S.d&&wcm ? `<span>Print <b>${wcm.toFixed(1)} × ${hcm.toFixed(1)} cm</b></span><span>Size <b>${S.size}</b></span><span>${g.name}, ${COLOURS[S.c].name.toLowerCase()}</span><span class="hint">Shown in true proportion for size ${S.size}</span>` : "";
+  $("spec").innerHTML = S.d&&wcm ? `<span>Print <b>${wcm.toFixed(1)} × ${hcm.toFixed(1)} cm</b></span><span>Size <b>${S.size}</b></span><span>${g.name}, ${COLOURS[S.c].name.toLowerCase()}</span><span><b>${rs(unitPrice())}</b></span><span class="hint">Shown in true proportion for size ${S.size}</span>` : "";
   updateMsg(wcm,hcm);
 }
 let lastSize=[0,0];
 function updateMsg(wcm,hcm){
   if(wcm) lastSize=[wcm,hcm];
   const g=GARMENTS[S.g], d=S.d, nm=$("nm").value.trim(), city=$("city").value.trim();
-  const lines=["GINI order",`Garment: ${g.name} (${COLOURS[S.c].name})`,`Size: ${S.size}`,
+  const fab=typeof PRICES[S.g]==="object"?`, ${FABRICS[S.gsm]}`:"", up=unitPrice(), tot=up*S.qty;
+  $("total").textContent=rs(tot); $("each").textContent=S.qty>1?`${S.qty} × ${rs(up)} · free delivery`:"Free delivery included";
+  const lines=["GINI order",`Garment: ${g.name}${fab} (${COLOURS[S.c].name})`,`Size: ${S.size}`,
     d?`Design: ${d.code} ${d.name}`:"Design: -", d?`Back print: ${lastSize[0].toFixed(1)} x ${lastSize[1].toFixed(1)} cm`:"",
-    `Quantity: ${S.qty}`, nm?`Name: ${nm}`:"", city?`City: ${city}`:""].filter(Boolean);
+    `Quantity: ${S.qty}`, `Price: ${S.qty>1?S.qty+" x "+rs(up)+" = ":""}${rs(tot)} (free delivery)`, nm?`Name: ${nm}`:"", city?`City: ${city}`:""].filter(Boolean);
   const text=lines.join("\n"); $("msg").textContent=text;
   const wa=$("wa");
   if(WHATSAPP){ wa.href="https://wa.me/"+WHATSAPP+"?text="+encodeURIComponent(text); wa.removeAttribute("aria-disabled"); }
   else { wa.href="https://wa.me/?text="+encodeURIComponent(text); }
   return text;
 }
-function refresh(){drawGarments();drawColours();drawPrints();drawSizes();render();updateMsg();}
+function drawFabric(){const el=$("fabric"), p=PRICES[S.g]; el.hidden=typeof p!=="object"; if(el.hidden) return;
+  el.replaceChildren(...Object.keys(p).map(k=>chip(FABRICS[k],rs(p[k]),S.gsm===k,()=>{S.gsm=k;drawFabric();updateMsg();updateSpec(...lastSize);})));}
+function refresh(){drawGarments();drawFabric();drawColours();drawPrints();drawSizes();render();updateMsg();}
 $("qm").onclick=()=>{S.qty=Math.max(1,S.qty-1);$("qv").textContent=S.qty;updateMsg();};
 $("qp").onclick=()=>{S.qty=Math.min(20,S.qty+1);$("qv").textContent=S.qty;updateMsg();};
 $("nm").oninput=$("city").oninput=()=>updateMsg();
