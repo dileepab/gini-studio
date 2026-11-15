@@ -69,7 +69,11 @@ Play Store එකට upload කරන හැම version එකක්ම මේ k
    - `ANDROID_KEY_PASSWORD` = key password එක (සාමාන්‍යයෙන් keystore password එකමයි)
 3. Actions → **Android app** → **Run workflow**. ඉවර වුණාම Artifacts වල **gini-studio-release-aab** download කරන්න. ඇතුළේ `app-release.aab`. **මේකයි Play Store එකට දාන්නේ.**
 
-> GitHub build එක පටන් ගන්නේ නැත්නම් (හොඳටම "failed" කියලා තත්පර 2-3 කින් නවතිනවා නම්): `https://github.com/settings/billing` බලන්න, account lock එකක් හරි payment problem එකක් හරි තියෙනවද කියලා. නැත්නම් ක්‍රමය B.
+> GitHub build එක තත්පර 2-3 කින් නවතිනවා නම් සහ run එකේ **"account is locked due to a billing issue"** කියලා තියෙනවා නම්:
+> 1. https://github.com/settings/billing → **Payment information**: card එක update කරන්න / ගෙවන්න තියෙන මුදල (outstanding balance) ගෙවන්න.
+> 2. Paid plan එකක් (Pro/Copilot) ඕනේ නැත්නම් **Plans and usage → Downgrade to Free**, Copilot subscription එකක් තියෙනවා නම් ඒකත් cancel කරන්න. Free plan එකේ public repo වලට Actions free.
+> 3. Lock එක අයින් වුණාම (සමහර වෙලාවට පැයක් විතර යනවා) Actions → run එක → **Re-run all jobs**.
+> ඒක හරි යනකම් ක්‍රමය B පාවිච්චි කරන්න.
 
 **ක්‍රමය B (Mac එකේ Android Studio එකෙන්):**
 
@@ -82,7 +86,10 @@ Play Store එකට upload කරන හැම version එකක්ම මේ k
    npm ci
    npm run android
    ```
-   (`git clone` කරලා තියෙනවා නම් `git pull` විතරක් ඇති.) Android Studio open වෙනවා.
+   (`git clone` කරලා තියෙනවා නම් `git pull` විතරක් ඇති.) Android Studio open වෙනවා. පළමු පාර Android SDK එක download කරන්න කියයි, **Accept/Next** දෙන්න. "Gradle sync" ඉවර වෙනකම් (පහළ progress bar එක) ඉන්න.
+
+   **Test කරන්න විතරක් (key එක ඕනේ නෑ):** Menu **Build → Build App Bundle(s) / APK(s) → Build APK(s)**. ඉවර වුණාම "locate" click කරන්න. File එක: `app/android/app/build/outputs/apk/debug/app-debug.apk`. ඒක phone එකට යවලා install කරන්න (පියවර 1 වගේ).
+   නැත්නම් phone එකේ **Developer options → USB debugging** on කරලා USB එකෙන් connect කරලා Android Studio එකේ උඩ ▶ (Run) ඔබන්න, app එක phone එකට කෙලින්ම install වෙනවා.
 3. Android Studio: **Build → Generate Signed App Bundle or APK → Android App Bundle → Next**. Key store path = `gini-upload.jks`, passwords දාලා, **release** තෝරලා **Create**.
 4. AAB එක හැදෙන්නේ `app/android/app/release/app-release.aab`.
 
