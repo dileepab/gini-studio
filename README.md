@@ -18,3 +18,9 @@ This repo is the built site. The source lives on Dileepa's Mac in `TikTokBrand/0
 
 ## App (PWA)
 manifest.webmanifest + sw.js + icons make the site installable ("Add to Home Screen" on iPhone, "Install app" on Android Chrome). It works offline for pages and images already seen.
+
+## Mobile app (Android + iOS)
+`app/` is a Capacitor app that bundles this site (works offline, WhatsApp order opens the WhatsApp app, share/save mockup).
+- Build/publish guide (Sinhala): `app/APP_GUIDE_SI.md`
+- Android APK/AAB build on GitHub Actions: `.github/workflows/android-app.yml`
+- Store images: `app/store/`, privacy policy: `privacy.html`

@@ -1,0 +1,6 @@
+node_modules/
+www/
+# Signing secrets: NEVER commit these. Back them up yourself (see APP_GUIDE_SI.md).
+*.jks
+*.keystore
+android/keystore.properties
