@@ -42,7 +42,6 @@ header.top{display:flex;align-items:baseline;justify-content:space-between;gap:1
   .spec .hint{display:none}
 }
 .frame{position:relative;background:#cbbfb3;border-radius:6px;overflow:hidden;aspect-ratio:900/1205;max-width:100%;margin:0 auto}
-@media (max-width:860px){.frame{height:min(44vh,560px);width:auto;max-width:100%}}
 .frame canvas{display:block;width:100%;height:100%}
 .frame .busy{position:absolute;inset:auto 10px 10px auto;background:rgba(21,18,17,.75);color:var(--bone);font-size:12px;padding:4px 10px;border-radius:99px}
 .spec{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:12px;font-size:13px;color:var(--smoke);font-variant-numeric:tabular-nums;justify-content:center}
@@ -93,6 +92,33 @@ input.t:focus,.chip:focus-visible,.pc:focus-visible,.sw:focus-visible,.btn:focus
 .saveimg{margin-top:12px;text-align:center}
 .saveimg img{max-width:100%;border-radius:6px;border:1px solid var(--line)}
 .toast{font-size:13px;color:var(--ok);min-height:1.2em}
+.frame{cursor:zoom-in}
+.zbtn{position:absolute;left:10px;bottom:10px;display:inline-flex;align-items:center;gap:6px;background:rgba(21,18,17,.78);color:var(--bone);border:1px solid rgba(255,255,255,.18);border-radius:99px;font:600 12px var(--body);padding:6px 11px;cursor:pointer}
+.zoom{position:fixed;inset:0;z-index:50;background:#0d0b0a;display:flex;flex-direction:column}
+.zoom[hidden]{display:none}
+.zv{position:relative;flex:1;overflow:hidden;touch-action:none;cursor:grab}
+.zv canvas{position:absolute;left:0;top:0;transform-origin:0 0;display:block;background:#cbbfb3}
+.zbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px max(16px,env(safe-area-inset-left,0px)) calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--soot)}
+.zhint{font-size:12px;color:var(--smoke)}
+.zctl{display:flex;gap:8px}
+.zctl button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--char);color:var(--bone);font-size:20px;cursor:pointer}
+.zbusy{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);background:rgba(21,18,17,.8);font-size:12px;padding:5px 12px;border-radius:99px}
+html.zoom-open,html.zoom-open body{overflow:hidden}
+.mbar{display:none}
+@media (max-width:860px){
+  /* phone: the garment fills the width (side wall cropped), bigger and easier to read */
+  .frame{width:100%;height:min(40vh,520px);aspect-ratio:auto}
+  .frame canvas{object-fit:cover;object-position:50% 60%}
+  .chip{padding:10px 14px;min-height:44px}
+  .prints{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:20;align-items:center;justify-content:space-between;gap:12px;
+    padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+    background:rgba(21,18,17,.96);border-top:1px solid var(--line);backdrop-filter:blur(8px)}
+  .mbar b{display:block;font-family:var(--display);font-size:24px;color:var(--ember);line-height:1}
+  .mbar small{font-size:11px;color:var(--smoke)}
+  .mbar .btn{padding:12px 16px}
+  .wrap{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+}
 @media (prefers-reduced-motion:no-preference){.chip,.pc,.sw{transition:border-color .15s, box-shadow .15s}}
 </style>
 
@@ -104,7 +130,7 @@ input.t:focus,.chip:focus-visible,.pc:focus-visible,.sw:focus-visible,.btn:focus
 
   <div class="grid">
     <section class="stage" aria-label="Live mockup">
-      <div class="frame" id="frame"><canvas id="cv" width="900" height="1205" role="img" aria-label="Mockup of the selected garment with the selected print"></canvas><div class="busy" id="busy">Loading…</div></div>
+      <div class="frame" id="frame"><canvas id="cv" width="900" height="1205" role="img" aria-label="Mockup of the selected garment with the selected print"></canvas><div class="busy" id="busy">Loading…</div><button type="button" class="zbtn" id="zbtn" aria-label="Zoom in on the mockup"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21M10.5 7.5v6M7.5 10.5h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Zoom</button></div>
       <div class="spec" id="spec"></div>
     </section>
 
@@ -158,6 +184,14 @@ input.t:focus,.chip:focus-visible,.pc:focus-visible,.sw:focus-visible,.btn:focus
   </div>
 </div>
 
+<div class="zoom" id="zoom" hidden role="dialog" aria-modal="true" aria-label="Zoomed mockup">
+  <div class="zv" id="zv"><canvas id="zc" width="900" height="1205"></canvas></div>
+  <div class="zbar"><span class="zhint">Pinch or double-tap to zoom · <span class="si">ලොකු කරලා බලන්න</span></span>
+    <span class="zctl"><button type="button" id="zout" aria-label="Zoom out">−</button><button type="button" id="zin" aria-label="Zoom in">+</button><button type="button" id="zclose" aria-label="Close">✕</button></span></div>
+  <div class="zbusy" id="zbusy" hidden>Loading HD…</div>
+</div>
+<div class="mbar" id="mbar"><div><b id="mtotal">Rs 0</b><small>Free delivery</small></div><a class="btn wa" id="mwa" href="#" target="_blank" rel="noopener">Order on WhatsApp</a></div>
+
 <script>
 // ---- Shop settings -------------------------------------------------------
 const WHATSAPP = "94702010070";         // e.g. "94771234567" (country code, no +). Empty = copy-only.
@@ -184,7 +218,9 @@ const COLOURS = {black:{name:"Black",hex:"#111",group:"dark"}, white:{name:"Whit
   rose:{name:"Dusty rose",hex:"#c98f93",group:"light"}, red:{name:"Red",hex:"#c4161c",group:"red"}};
 // Base photo geometry (900x1205 px): centre x, print top y, px per real cm (size L garment).
 const BASES = {
-  tee_black:{cx:453,top:321,pxcm:8.4}, tee_white:{cx:450,top:318,pxcm:8.1},
+  // 2026-11-17 real scale: pxcm = geometric mean of (visible armpit width / real visible width) and (collar->hem px / real back length).
+  // Gemini shirts hang longer than real ones, so width-only scale made prints look ~15% small (Dileepa). Tee: visible 50 cm, length 76 cm; top = collar + 8 cm.
+  tee_black:{cx:458,top:316,pxcm:9.69}, tee_white:{cx:452,top:316,pxcm:9.45},
   // hoodies: top = back neck seam + 10 cm; hood = outline (left side top->tip, right side top->tip) drawn back over the print
   hoodie_black:{cx:452,top:372,pxcm:9.2,hood:[[298,260],[305,320],[335,380],[375,425],[415,455],[450,462],[490,450],[540,420],[590,375],[620,320],[625,265]]},
   hoodie_white:{cx:461,top:344,pxcm:9.9,hood:[[312,240],[320,320],[345,375],[385,412],[430,433],[470,441],[520,430],[565,405],[605,365],[628,310],[630,245]]},
@@ -194,9 +230,11 @@ const BASES = {
   hoodie_red:{cx:470,top:350,pxcm:9.84,hood:[[305,240],[330,320],[370,380],[420,425],[465,446],[510,443],[560,420],[605,380],[635,320],[645,240]]},
   hoodie_sage:{cx:458,top:358,pxcm:9.31,hood:[[300,240],[315,320],[350,380],[390,420],[410,442],[450,449],[500,444],[550,420],[600,380],[630,320],[640,240]]},
   hoodie_rose:{cx:480,top:356,pxcm:9.37,hood:[[315,250],[320,330],[360,390],[410,430],[440,452],[480,455],[520,435],[560,400],[600,355],[625,305],[640,250]]},
-  skinner_black:{cx:445,top:405,pxcm:8.5}, skinner_white:{cx:443,top:405,pxcm:8.5},
-  longsleeve_black:{cx:455,top:316,pxcm:9.6},
-  longsleeve_white:{cx:452,top:304,pxcm:8.8},
+  // arm-cut L: visible ~50 cm, shoulder->hem 74 cm (mean 9.8), held at 9.3 so 26 cm keeps ~2.5 cm to the armhole binding; top = shoulder top + 12 cm
+  skinner_black:{cx:450,top:377,pxcm:9.3}, skinner_white:{cx:450,top:380,pxcm:9.3},
+  // long sleeve L: visible hem ~45 cm, length 76 cm; top = collar + 7.5 cm
+  longsleeve_black:{cx:456,top:300,pxcm:9.6},
+  longsleeve_white:{cx:450,top:300,pxcm:10.0},
 };
 // Designs. native = garment the print file was sized for; dark/light = file + real L/XL size in cm.
 const T="tee", G="gym", H="hoodie";
@@ -275,17 +313,6 @@ function blur(src,w,h,r){ // separable box blur, 2 passes ~ gaussian
   }
   return a;
 }
-const baseCache = {};
-async function getBase(key){
-  if(baseCache[key]) return baseCache[key];
-  const img = await loadImg("b/"+key+".jpg");
-  const W=img.width,Hh=img.height, c=document.createElement("canvas"); c.width=W;c.height=Hh;
-  const x=c.getContext("2d"); x.drawImage(img,0,0);
-  const px=x.getImageData(0,0,W,Hh).data, L=new Float32Array(W*Hh);
-  for(let i=0;i<W*Hh;i++) L[i]=(px[i*4]*.299+px[i*4+1]*.587+px[i*4+2]*.114)/255;
-  return baseCache[key] = {img,W,H:Hh,L,Ls:blur(L,W,Hh,1),Lm:blur(L,W,Hh,4),Lb:blur(L,W,Hh,36)};
-}
-
 // ---- print size for garment + size class ---------------------------------
 function printSize(d, variant){
   const [ ,w,h] = d.v[variant], [nw,nh] = NATIVE_BOX[d.native];
@@ -298,61 +325,115 @@ function printSize(d, variant){
 }
 
 // ---- render ---------------------------------------------------------------
-let token=0;
-async function render(){
-  const my=++token; $("busy").hidden=false;
-  const baseKey = GARMENTS[S.g].colours[S.c], geo=BASES[baseKey], group=COLOURS[S.c].group;
-  const B = await getBase(baseKey); if(my!==token) return;
-  ctx.drawImage(B.img,0,0);
-  const d=S.d;
-  const vkey=vk(d);
-  if(!vkey){ $("busy").hidden=true; updateSpec(); return; }
-  const pimg = await loadImg("p/"+d.v[vkey][0]+".webp"); if(my!==token) return;
-  const [wcm,hcm] = printSize(d, vkey);
+// compose(): draws the mockup into a 2D context at scale sc (1 = 900 px page view, 2 = 1800 px HD for zoom/save).
+// Fold analysis runs only on the area around the print, so the HD render stays fast on phones.
+const CHEST={S:53.3,M:55.9,L:58.4,XL:61};
+async function compose(c2d, sc, alive){
+  const baseKey=GARMENTS[S.g].colours[S.c], geo=BASES[baseKey], group=COLOURS[S.c].group;
+  const img=await loadImg((sc>1?"b2/":"b/")+baseKey+".jpg"); if(!alive()) return null;
+  const W=img.width, H=img.height;
+  if(c2d.canvas.width!==W||c2d.canvas.height!==H){ c2d.canvas.width=W; c2d.canvas.height=H; }
+  c2d.drawImage(img,0,0);
+  const d=S.d, vkey=vk(d); if(!vkey) return {};
+  const pimg=await loadImg((sc>1?"p2/":"p/")+d.v[vkey][0]+".webp"); if(!alive()) return null;
+  const [wcm,hcm]=printSize(d,vkey);
   // the photo is a size L garment: scale by chest width so the print sits on the shirt in the true proportion for the chosen size
-  const CHEST={S:53.3,M:55.9,L:58.4,XL:61}, kz=CHEST.L/CHEST[S.size];
-  const bw=Math.round(wcm*geo.pxcm*kz), bh=Math.round(hcm*geo.pxcm*kz), bx=Math.round(geo.cx-bw/2);
+  const kz=CHEST.L/CHEST[S.size], cm=geo.pxcm*kz;
   let by=geo.top;
-  const boxH=GARMENTS[S.g].box[(S.size==="S"||S.size==="M")?"SM":"LXL"][1], shortP=hcm<0.5*boxH, cm=geo.pxcm*kz;
-  if(geo.hood){ const tip=Math.max(...geo.hood.map(p=>p[1]));
-    by = Math.round(tip+2*cm); }  // hoodies (2026-11-14): every print top sits 2 cm below the hood tip, fully visible
-  else if(shortP){ by=Math.round(by+(0.5*boxH-hcm)*0.35*cm); } // short prints drop a little so they sit on the upper back, not on the collar
+  const boxH=GARMENTS[S.g].box[(S.size==="S"||S.size==="M")?"SM":"LXL"][1], shortP=hcm<0.5*boxH;
+  if(geo.hood){ const tip=Math.max(...geo.hood.map(p=>p[1])); by=tip+2*cm; }  // hoodies (2026-11-14): print top 2 cm below the hood tip
+  else if(shortP){ by=by+(0.5*boxH-hcm)*0.35*cm; } // short prints drop a little so they sit on the upper back, not on the collar
+  const bw=Math.round(wcm*cm*sc), bh=Math.round(hcm*cm*sc), bx=Math.round(geo.cx*sc-bw/2); by=Math.round(by*sc);
+  // base luminance around the print (pad covers the wide blur)
+  const pad=Math.round(60*sc), rx=Math.max(0,bx-pad), ry=Math.max(0,by-pad), rw=Math.min(W,bx+bw+pad)-rx, rh=Math.min(H,by+bh+pad)-ry;
+  const rp=c2d.getImageData(rx,ry,rw,rh).data, L=new Float32Array(rw*rh);
+  for(let i=0;i<rw*rh;i++) L[i]=(rp[i*4]*.299+rp[i*4+1]*.587+rp[i*4+2]*.114)/255;
+  const Ls=blur(L,rw,rh,Math.round(sc)), Lm=blur(L,rw,rh,4*sc), Lb=blur(L,rw,rh,36*sc);
   const pc=document.createElement("canvas"); pc.width=bw; pc.height=bh;
   const px=pc.getContext("2d"); px.imageSmoothingQuality="high"; px.drawImage(pimg,0,0,bw,bh);
   const P=px.getImageData(0,0,bw,bh).data;
-  const out=ctx.getImageData(bx,by,bw,bh), O=out.data, W=B.W;
-  // local stats over the print area
-  let sum=0,sum2=0,n=0, vals=[];
-  for(let y=0;y<bh;y+=3)for(let x=0;x<bw;x+=3){const i=(by+y)*W+bx+x, v=B.Lm[i]-B.Lb[i]; sum+=v;sum2+=v*v;n++; vals.push(B.Ls[i]);}
+  const out=c2d.getImageData(bx,by,bw,bh), O=out.data, ix=(x,y)=>(by+y-ry)*rw+(bx+x-rx);
+  let sum=0,sum2=0,n=0, vals=[]; const st=3*sc;
+  for(let y=0;y<bh;y+=st)for(let x=0;x<bw;x+=st){const i=ix(x,y), v=Lm[i]-Lb[i]; sum+=v;sum2+=v*v;n++; vals.push(Ls[i]);}
   const sd=Math.max(.004,Math.sqrt(sum2/n-(sum/n)**2)); vals.sort((a,b)=>a-b);
   const white=vals[Math.floor(vals.length*.97)], meanLb=vals[Math.floor(vals.length*.5)];
-  const amp=GARMENTS[S.g].disp, light=group==="light";
+  const amp=GARMENTS[S.g].disp*.4*sc, light=group==="light";
   for(let y=0;y<bh;y++)for(let x=0;x<bw;x++){
-    const i=(by+y)*W+bx+x, dsp=Math.max(-2.5,Math.min(2.5,(B.Lm[i]-B.Lb[i])/sd))*amp*.4;
+    const i=ix(x,y), dsp=Math.max(-2.5,Math.min(2.5,(Lm[i]-Lb[i])/sd))*amp;
     const sx=x+dsp, sy=y+dsp; if(sx<0||sy<0||sx>=bw-1||sy>=bh-1) continue;
     const x0=sx|0,y0=sy|0,fx=sx-x0,fy=sy-y0, j=(y0*bw+x0)*4, j2=j+bw*4;
     const w00=(1-fx)*(1-fy),w10=fx*(1-fy),w01=(1-fx)*fy,w11=fx*fy;
     const a=(P[j+3]*w00+P[j+7]*w10+P[j2+3]*w01+P[j2+7]*w11)/255; if(a<.01) continue;
     let s;
-    if(light){ s=Math.min(1.08,B.Ls[i]/white); }           // multiply: folds + fabric shade the ink
-    else { s=1+(B.Ls[i]/Math.max(B.Lb[i],.02)-1)*.55; s*=Math.pow(B.Lb[i]/Math.max(meanLb,.02),.35); s=Math.max(.5,Math.min(1.35,s)); }
+    if(light){ s=Math.min(1.08,Ls[i]/white); }           // multiply: folds + fabric shade the ink
+    else { s=1+(Ls[i]/Math.max(Lb[i],.02)-1)*.55; s*=Math.pow(Lb[i]/Math.max(meanLb,.02),.35); s=Math.max(.5,Math.min(1.35,s)); }
     const k=(y*bw+x)*4, A=a*.96;
     for(let c=0;c<3;c++){
       const ink=(P[j+c]*w00+P[j+4+c]*w10+P[j2+c]*w01+P[j2+4+c]*w11)/Math.max(a,.01);
       O[k+c]=O[k+c]*(1-A)+Math.min(255,ink*s)*A;
     }
   }
-  ctx.putImageData(out,bx,by);
-  if(geo.hood){ // lay the hood back over the print, with a soft 1.5 px edge
-    const hc=document.createElement("canvas"); hc.width=B.W; hc.height=B.H; const h=hc.getContext("2d");
-    h.drawImage(B.img,0,0); h.globalCompositeOperation="destination-in"; h.filter="blur(1.5px)";
-    const pts=geo.hood; h.beginPath(); h.moveTo(pts[0][0],pts[0][1]-120);
-    pts.forEach(p=>h.lineTo(p[0],p[1])); h.lineTo(pts[pts.length-1][0],pts[pts.length-1][1]-120); h.closePath(); h.fill();
-    ctx.drawImage(hc,0,0);
+  c2d.putImageData(out,bx,by);
+  if(geo.hood){ // lay the hood back over the print, with a soft edge
+    const hc=document.createElement("canvas"); hc.width=W; hc.height=H; const h=hc.getContext("2d");
+    h.drawImage(img,0,0); h.globalCompositeOperation="destination-in"; h.filter=`blur(${1.5*sc}px)`;
+    const pts=geo.hood.map(([x,y])=>[x*sc,y*sc]); h.beginPath(); h.moveTo(pts[0][0],pts[0][1]-120*sc);
+    pts.forEach(p=>h.lineTo(p[0],p[1])); h.lineTo(pts[pts.length-1][0],pts[pts.length-1][1]-120*sc); h.closePath(); h.fill();
+    c2d.drawImage(hc,0,0);
   }
-  $("busy").hidden=true; updateSpec(wcm,hcm);
-  if(!$("saveWrap").hidden) $("saveImg").src=cv.toDataURL("image/jpeg",.9);
+  return {wcm,hcm};
 }
+let token=0;
+async function render(){
+  const my=++token; $("busy").hidden=false;
+  const r=await compose(ctx,1,()=>my===token); if(!r) return;
+  $("busy").hidden=true; updateSpec(r.wcm,r.hcm);
+  if(!$("saveWrap").hidden) hdDataURL().then(u=>{ if(u) $("saveImg").src=u; });
+  if(Z.open) zoomHD();
+}
+// HD (1800 px) render for zoom and saving
+let hdTok=0; const hdCv=document.createElement("canvas"), hdCtx=hdCv.getContext("2d",{willReadFrequently:true});
+async function renderHD(){ const my=++hdTok; const r=await compose(hdCtx,2,()=>my===hdTok); return r&&my===hdTok ? hdCv : null; }
+async function hdDataURL(){ const c=await renderHD(); return c ? c.toDataURL("image/jpeg",.92) : null; }
+window.giniHD = hdDataURL; // used by the app's share button
+
+// ---- zoom viewer: tap the mockup, pinch / drag / double-tap / wheel, HD render -------------
+const Z={open:false,s:1,tx:0,ty:0,pts:new Map(),last:null,lastTap:0};
+function zApply(){ const c=$("zc"); c.style.transform=`translate(${Z.tx}px,${Z.ty}px) scale(${Z.s})`; }
+function zFit(){ const v=$("zv").getBoundingClientRect(), c=$("zc"); const k=Math.min(v.width/900, v.height/1205);
+  c.style.width=900*k+"px"; c.style.height=1205*k+"px"; Z.s=1; Z.tx=(v.width-900*k)/2; Z.ty=(v.height-1205*k)/2; Z.bw=900*k; Z.bh=1205*k; zApply(); }
+function zClamp(){ const v=$("zv").getBoundingClientRect(), w=Z.bw*Z.s, h=Z.bh*Z.s;
+  Z.tx = w<=v.width ? (v.width-w)/2 : Math.min(0,Math.max(v.width-w,Z.tx));
+  Z.ty = h<=v.height ? (v.height-h)/2 : Math.min(0,Math.max(v.height-h,Z.ty)); }
+function zAt(ns,cx,cy){ ns=Math.max(1,Math.min(6,ns)); const r=$("zv").getBoundingClientRect(); cx-=r.left; cy-=r.top;
+  Z.tx=cx-(cx-Z.tx)*ns/Z.s; Z.ty=cy-(cy-Z.ty)*ns/Z.s; Z.s=ns; zClamp(); zApply(); }
+async function zoomHD(){ $("zbusy").hidden=false; const c=await renderHD(); if(!c||!Z.open) return;
+  const z=$("zc"); z.width=c.width; z.height=c.height; z.getContext("2d").drawImage(c,0,0); $("zbusy").hidden=true; }
+function openZoom(){ if(Z.open) return; Z.open=true; const z=$("zc"); z.width=900; z.height=1205; z.getContext("2d").drawImage(cv,0,0);
+  $("zoom").hidden=false; document.documentElement.classList.add("zoom-open"); zFit(); zoomHD(); history.pushState({zoom:1},""); $("zclose").focus(); }
+function closeZoom(fromPop){ if(!Z.open) return; Z.open=false; $("zoom").hidden=true; document.documentElement.classList.remove("zoom-open"); if(!fromPop&&history.state&&history.state.zoom) history.back(); }
+window.giniCloseZoom=()=>{ if(Z.open){ closeZoom(); return true; } return false; };
+addEventListener("popstate",()=>closeZoom(true));
+addEventListener("keydown",e=>{ if(Z.open&&e.key==="Escape") closeZoom(); });
+addEventListener("resize",()=>{ if(Z.open) zFit(); });
+(function(){
+  const v=$("zv");
+  v.addEventListener("pointerdown",e=>{ v.setPointerCapture(e.pointerId); Z.pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); Z.last=null; Z.moved=false; });
+  v.addEventListener("pointermove",e=>{ if(!Z.pts.has(e.pointerId)) return; const prev=Z.pts.get(e.pointerId); Z.pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(Z.pts.size===1){ const dx=e.clientX-prev.x, dy=e.clientY-prev.y; if(Math.abs(dx)+Math.abs(dy)>2) Z.moved=true; Z.tx+=dx; Z.ty+=dy; zClamp(); zApply(); }
+    else if(Z.pts.size===2){ const [a,b]=[...Z.pts.values()], d=Math.hypot(a.x-b.x,a.y-b.y), cx=(a.x+b.x)/2, cy=(a.y+b.y)/2; Z.moved=true;
+      if(Z.last){ zAt(Z.s*d/Z.last.d,cx,cy); Z.tx+=cx-Z.last.cx; Z.ty+=cy-Z.last.cy; zClamp(); zApply(); } Z.last={d,cx,cy}; } });
+  const up=e=>{ const was=Z.pts.size; Z.pts.delete(e.pointerId); Z.last=null;
+    if(was===1&&!Z.moved&&e.type==="pointerup"){ const t=performance.now();
+      if(t-Z.lastTap<320){ zAt(Z.s>1.3?1:2.6,e.clientX,e.clientY); Z.lastTap=0; } else Z.lastTap=t; } };
+  v.addEventListener("pointerup",up); v.addEventListener("pointercancel",up);
+  v.addEventListener("wheel",e=>{ e.preventDefault(); zAt(Z.s*Math.exp(-e.deltaY*.0025),e.clientX,e.clientY); },{passive:false});
+  $("zclose").onclick=()=>closeZoom();
+  $("zin").onclick=()=>{ const r=v.getBoundingClientRect(); zAt(Z.s*1.6,r.left+r.width/2,r.top+r.height/2); };
+  $("zout").onclick=()=>{ const r=v.getBoundingClientRect(); zAt(Z.s/1.6,r.left+r.width/2,r.top+r.height/2); };
+  $("frame").addEventListener("click",openZoom);
+  $("zbtn").addEventListener("click",e=>{ e.stopPropagation(); openZoom(); });
+})();
 
 // ---- UI -------------------------------------------------------------------
 function chip(label,sub,pressed,on){const b=document.createElement("button");b.type="button";b.className="chip";b.setAttribute("aria-pressed",pressed);b.innerHTML=label+(sub?`<small>${sub}</small>`:"");b.onclick=on;return b;}
@@ -388,9 +469,10 @@ function updateMsg(wcm,hcm){
     d?`Design: ${d.code} ${d.name}`:"Design: -", d?`Back print: ${lastSize[0].toFixed(1)} x ${lastSize[1].toFixed(1)} cm`:"",
     `Quantity: ${S.qty}`, `Price: ${S.qty>1?S.qty+" x "+rs(up)+" = ":""}${rs(tot)} (free delivery)`, nm?`Name: ${nm}`:"", city?`City: ${city}`:""].filter(Boolean);
   const text=lines.join("\n"); $("msg").textContent=text;
-  const wa=$("wa");
+  const wa=$("wa"); $("mtotal").textContent=rs(tot);
   if(WHATSAPP){ wa.href="https://wa.me/"+WHATSAPP+"?text="+encodeURIComponent(text); wa.removeAttribute("aria-disabled"); }
   else { wa.href="https://wa.me/?text="+encodeURIComponent(text); }
+  $("mwa").href=wa.href;
   return text;
 }
 function drawFabric(){const el=$("fabric"), p=PRICES[S.g]; el.hidden=typeof p!=="object"; if(el.hidden) return;
@@ -400,7 +482,7 @@ $("qm").onclick=()=>{S.qty=Math.max(1,S.qty-1);$("qv").textContent=S.qty;updateM
 $("qp").onclick=()=>{S.qty=Math.min(20,S.qty+1);$("qv").textContent=S.qty;updateMsg();};
 $("nm").oninput=$("city").oninput=()=>updateMsg();
 $("copy").onclick=()=>{const t=updateMsg();navigator.clipboard?.writeText(t).then(()=>$("toast").textContent="Order copied. Paste it in WhatsApp.",()=>{const r=document.createRange();r.selectNodeContents($("msg"));getSelection().removeAllRanges();getSelection().addRange(r);$("toast").textContent="Text selected. Copy it with your keyboard or long-press.";});};
-$("save").onclick=()=>{$("saveWrap").hidden=false;$("saveImg").src=cv.toDataURL("image/jpeg",.9);$("saveWrap").scrollIntoView({behavior:"smooth",block:"nearest"});};
+$("save").onclick=async()=>{$("saveWrap").hidden=false;$("saveImg").src=cv.toDataURL("image/jpeg",.9);$("saveWrap").scrollIntoView({behavior:"smooth",block:"nearest"});const u=await hdDataURL();if(u)$("saveImg").src=u;};
 S.d=D.find(d=>d.name==="Fire Skull");
 refresh();
 </script>

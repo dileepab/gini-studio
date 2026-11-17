@@ -8,6 +8,7 @@ This repo is the built site. The source lives on Dileepa's Mac in `TikTokBrand/0
 
 - `b/` garment base photos (900x1205)
 - `p/` print images, `t/` thumbnails
+- `b2/` (1800x2410) and `p2/` (1600 px) HD copies used by zoom and "Save mockup" (made by `prep_hi.py` on the Mac)
 
 ## Updating
 1. Edit the page source on the Mac: TikTokBrand/07_web/gini_designer/index.html (new prints in p/, thumbs in t/, bases in b/).
