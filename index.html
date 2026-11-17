@@ -74,6 +74,8 @@ header.top{display:flex;align-items:baseline;justify-content:space-between;gap:1
 .cust textarea{display:block;width:100%;min-height:76px;resize:vertical;font:inherit;color:var(--bone);background:var(--char);border:1px solid var(--line);border-radius:4px;padding:10px;margin-top:6px}
 .cust .fee{border:1px solid var(--ember);border-radius:6px;padding:10px 12px;font-size:13px;line-height:1.45;margin-top:10px}
 .cust .fee b{color:var(--ember)}
+.cupl{position:absolute;right:10px;bottom:10px;z-index:3;white-space:nowrap;background:var(--ember);color:#1a0f08;border:0;border-radius:99px;font:700 14px var(--body);padding:10px 16px;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.45)}
+.cupl[hidden]{display:none}
 .filter{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .filter .chip{padding:5px 10px;font-size:12px}
 .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
@@ -161,7 +163,7 @@ html.zoom-open,html.zoom-open body{overflow:hidden}
 
   <div class="grid">
     <section class="stage" aria-label="Live mockup">
-      <div class="frame" id="frame"><canvas id="cv" width="900" height="1205" role="img" aria-label="Mockup of the selected garment with the selected print"></canvas><div class="busy" id="busy">Loading…</div><button type="button" class="nav prev" id="dprev" aria-label="Previous design">‹</button><button type="button" class="nav next" id="dnext" aria-label="Next design">›</button><button type="button" class="zbtn" id="zbtn" aria-label="Zoom in on the mockup"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21M10.5 7.5v6M7.5 10.5h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Zoom</button></div>
+      <div class="frame" id="frame"><canvas id="cv" width="900" height="1205" role="img" aria-label="Mockup of the selected garment with the selected print"></canvas><label class="cupl" id="cupl" for="custFile" hidden>📷 Upload your photo</label><div class="busy" id="busy">Loading…</div><button type="button" class="nav prev" id="dprev" aria-label="Previous design">‹</button><button type="button" class="nav next" id="dnext" aria-label="Next design">›</button><button type="button" class="zbtn" id="zbtn" aria-label="Zoom in on the mockup"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21M10.5 7.5v6M7.5 10.5h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Zoom</button></div>
       <div class="spec" id="spec"></div>
       <div class="quick" id="quick" aria-label="Quick change"><div class="qrow qg" id="qg"></div><div class="qrow qc" id="qc"></div><div class="qrow qd" id="qd"></div></div>
     </section>
@@ -185,7 +187,7 @@ html.zoom-open,html.zoom-open body{overflow:hidden}
       </div>
       <div class="step cust" id="custStep" hidden>
         <h2><i>★</i>Your design <span class="si">ඔයාගේම design එක</span></h2>
-        <div class="up"><label class="btn ghost" for="custFile" style="cursor:pointer">Upload image</label><input type="file" id="custFile" accept="image/*" hidden><img id="custThumb" alt="" hidden><span class="note" id="custName">PNG with no background works best. A photo or sketch is fine too.</span></div>
+        <div class="up"><label class="btn wa" for="custFile" style="cursor:pointer">📷 Upload your photo / design</label><input type="file" id="custFile" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"><img id="custThumb" alt="" hidden><span class="note" id="custName">PNG with no background works best. A photo or sketch is fine too.</span></div>
         <label class="f" for="custNote">Describe your idea (text, colours, placement)<textarea id="custNote" placeholder="e.g. My dog's photo in black and white, name ROCKY under it"></textarea></label>
         <div class="fee" id="custFee"></div>
       </div>
@@ -428,7 +430,7 @@ function customPlaceholder(){ // dashed box shown until the customer uploads the
   const c=document.createElement("canvas"); c.width=400; c.height=500; const x=c.getContext("2d"), ink=COLOURS[S.c].group==="light"?"#2a2a2a":"#f5f1ea";
   x.strokeStyle=ink; x.globalAlpha=.8; x.lineWidth=6; x.setLineDash([22,14]); x.strokeRect(6,6,388,488);
   x.setLineDash([]); x.fillStyle=ink; x.textAlign="center"; x.font="700 120px sans-serif"; x.fillText("+",200,250);
-  x.font="600 38px sans-serif"; x.fillText("YOUR DESIGN",200,330); x.font="500 26px sans-serif"; x.fillText("upload it below",200,375); return c; }
+  x.font="600 38px sans-serif"; x.fillText("YOUR DESIGN",200,330); x.font="500 26px sans-serif"; x.fillText("tap Upload your photo",200,375); return c; }
 let token=0;
 async function render(){
   const my=++token; $("busy").hidden=false;
@@ -499,7 +501,8 @@ function drawPrints(){
 }
 // ---- quick switch (2026-11-17): garment / colour / design strips under the mockup, arrows, swipe -------
 const SHORT={tee:"Tee",hoodie:"Hoodie",skinner:"Arm-cut",longsleeve:"Long sleeve"};
-function selectDesign(d){S.d=d;drawPrints();drawQuick();drawCustom();render();updateMsg();}
+function selectDesign(d){const was=S.d; S.d=d;drawPrints();drawQuick();drawCustom();render();updateMsg();
+  if(d.custom&&was!==d&&!d.img){ try{$("custFile").click();}catch(e){} }}
 function stepDesign(dir){const l=available(); if(!l.length) return; const i=Math.max(0,l.indexOf(S.d)); selectDesign(l[(i+dir+l.length)%l.length]);}
 function centre(el,btn,smooth){ if(!btn||!el.clientWidth) return; el.scrollTo({left:btn.offsetLeft-(el.clientWidth-btn.offsetWidth)/2,behavior:smooth?"smooth":"auto"}); }
 (function(){var mq=matchMedia("(max-width:860px)"),on=false;function chk(){var pn=document.querySelector(".panel");var want=mq.matches&&pn&&pn.getBoundingClientRect().top<-40;if(want!==on){on=want;document.body.classList.toggle("compact",on);}}addEventListener("scroll",chk,{passive:true});addEventListener("resize",chk);})();
@@ -520,7 +523,7 @@ function drawQuick(){
   f.addEventListener("pointerup",e=>{ if(!act) return; act=false; const dx=e.clientX-sx, dy=e.clientY-sy;
     if(Math.abs(dx)>40&&Math.abs(dx)>1.5*Math.abs(dy)){ swiped=true; stepDesign(dx<0?1:-1); } });
   f.addEventListener("pointercancel",()=>{act=false;});
-  f.addEventListener("click",e=>{ if(swiped){swiped=false;return;} if(e.target.closest(".nav")) return; openZoom(); });
+  f.addEventListener("click",e=>{ if(swiped){swiped=false;return;} if(e.target.closest(".nav,.cupl")) return; openZoom(); });
   $("dprev").addEventListener("click",e=>{e.stopPropagation();stepDesign(-1);});
   $("dnext").addEventListener("click",e=>{e.stopPropagation();stepDesign(1);});
   addEventListener("keydown",e=>{ if(Z.open||/INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
@@ -554,11 +557,12 @@ function updateMsg(wcm,hcm){
 }
 function drawFabric(){const el=$("fabric"), p=PRICES[S.g]; el.hidden=typeof p!=="object"; if(el.hidden) return;
   el.replaceChildren(...Object.keys(p).map(k=>chip(FABRICS[k],rs(p[k]),S.gsm===k,()=>{S.gsm=k;drawFabric();updateMsg();updateSpec(...lastSize);})));}
-function drawCustom(){const on=!!(S.d&&S.d.custom); $("custStep").hidden=!on; if(!on) return;
+function drawCustom(){const on=!!(S.d&&S.d.custom); $("custStep").hidden=!on; $("cupl").hidden=!on; if(!on) return;
+  $("cupl").textContent=CUSTOM.img?"📷 Change photo":"📷 Upload your photo";
   $("custFee").innerHTML=`Your own design adds <b>${rs(CUSTOM_FEE)}</b> and takes <b>${CUSTOM_DAYS}</b>, because we prepare and print it just for you. <span class="si">ඔයාගේම design එකකට ${rs(CUSTOM_FEE)}ක් වැඩිපුර, දවස් ටිකක් වැඩිපුර යනවා.</span><br>After you tap Order on WhatsApp, send your image in the same chat.`;}
 $("custFile").onchange=e=>{const f=e.target.files&&e.target.files[0]; if(!f) return; const u=URL.createObjectURL(f), im=new Image();
   im.onload=()=>{CUSTOM.img=im; CUSTOM.file=f.name; CUSTOM.v.custom=[null,im.width/Math.max(1,im.height),1]; $("custThumb").src=u; $("custThumb").hidden=false;
-    $("custName").textContent=f.name+" · send this image on WhatsApp after ordering"; render(); updateMsg();};
+    $("custName").textContent=f.name+" · send this image on WhatsApp after ordering"; drawCustom(); render(); updateMsg();};
   im.src=u;};
 $("custNote").oninput=()=>updateMsg();
 function refresh(){drawGarments();drawFabric();drawColours();drawPrints();drawQuick();drawCustom();drawSizes();render();updateMsg();}
