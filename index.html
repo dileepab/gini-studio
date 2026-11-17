@@ -66,6 +66,14 @@ header.top{display:flex;align-items:baseline;justify-content:space-between;gap:1
 .pc .cd{font-size:10px;letter-spacing:.1em;color:var(--smoke);font-variant-numeric:tabular-nums}
 .pc[aria-pressed="true"]{border-color:var(--ember);box-shadow:inset 0 0 0 1px var(--ember)}
 .th.dark{background:#141414}.th.light{background:#eeeae4}.th.red{background:#b3151a}
+/* custom design (2026-11-17): '+ Your design' tile and its step */
+.th.cu{background:repeating-linear-gradient(45deg,#2a1f1a 0 8px,#221a16 8px 16px)!important;color:var(--ember);font:700 26px/1 var(--display);border:1px dashed var(--ember)!important}
+.th.cu small{display:block;font:600 9px/1.1 var(--body);letter-spacing:.04em;margin-top:3px;color:var(--bone)}
+.cust .up{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.cust .up img{width:64px;height:64px;object-fit:contain;background:#141414;border-radius:6px;border:1px solid var(--line)}
+.cust textarea{display:block;width:100%;min-height:76px;resize:vertical;font:inherit;color:var(--bone);background:var(--char);border:1px solid var(--line);border-radius:4px;padding:10px;margin-top:6px}
+.cust .fee{border:1px solid var(--ember);border-radius:6px;padding:10px 12px;font-size:13px;line-height:1.45;margin-top:10px}
+.cust .fee b{color:var(--ember)}
 .filter{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .filter .chip{padding:5px 10px;font-size:12px}
 .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
@@ -137,6 +145,10 @@ html.zoom-open,html.zoom-open body{overflow:hidden}
   .mbar small{font-size:11px;color:var(--smoke)}
   .mbar .btn{padding:12px 16px}
   .wrap{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+  /* phone (Dileepa, Nov 17): the quick dock above already picks garment, colour and design, so those 3 steps are hidden here; tee fabric chips stay */
+  .panel>.step:nth-child(1)>h2,#garments,.panel>.step:nth-child(2),.panel>.step:nth-child(3){display:none}
+  .panel>.step:nth-child(1) .fabric{margin-top:0}
+  .panel h2 i{display:none}
 }
 @media (prefers-reduced-motion:no-preference){.chip,.pc,.sw{transition:border-color .15s, box-shadow .15s}}
 </style>
@@ -170,6 +182,12 @@ html.zoom-open,html.zoom-open body{overflow:hidden}
         <div class="filter" id="filter"></div>
         <div class="prints" id="prints"></div>
         <p class="note" id="designNote">Every design here is made for this shirt colour, so the ink reads well on it.</p>
+      </div>
+      <div class="step cust" id="custStep" hidden>
+        <h2><i>★</i>Your design <span class="si">ඔයාගේම design එක</span></h2>
+        <div class="up"><label class="btn ghost" for="custFile" style="cursor:pointer">Upload image</label><input type="file" id="custFile" accept="image/*" hidden><img id="custThumb" alt="" hidden><span class="note" id="custName">PNG with no background works best. A photo or sketch is fine too.</span></div>
+        <label class="f" for="custNote">Describe your idea (text, colours, placement)<textarea id="custNote" placeholder="e.g. My dog's photo in black and white, name ROCKY under it"></textarea></label>
+        <div class="fee" id="custFee"></div>
       </div>
       <div class="step">
         <h2><i>04</i>Size <span class="si">ප්‍රමාණය</span></h2>
@@ -220,7 +238,10 @@ const WHATSAPP = "94702010070";         // e.g. "94771234567" (country code, no 
 const PRICES = {tee:{"220":2390,"250":2690}, hoodie:3490, skinner:1890, longsleeve:2590};
 const FABRICS = {"220":"220 gsm", "250":"250 gsm premium"};
 const rs = n => "Rs "+n.toLocaleString("en-US");
-function unitPrice(){const p=PRICES[S.g]; return typeof p==="object"?p[S.gsm]:p;}
+// Custom design (2026-11-17, Dileepa): customer sends their own design; it costs a bit more and takes a few more days
+const CUSTOM_FEE = 500, CUSTOM_DAYS = "5-7 working days";
+const CUSTOM = {name:"Your own design", code:"CUSTOM", cat:"custom", native:"tee", custom:true, img:null, file:"", v:{custom:[null,0.8,1]}};
+function unitPrice(){const p=PRICES[S.g]; return (typeof p==="object"?p[S.gsm]:p) + (S.d&&S.d.custom?CUSTOM_FEE:0);}
 function fromPrice(k){const p=PRICES[k]; return typeof p==="object"?Math.min(...Object.values(p)):p;}
 const GARMENTS = {
   tee:      {name:"Oversized tee", si:"Oversized T-shirt", box:{SM:[34,49], LXL:[38,55]}, disp:9,
@@ -339,7 +360,7 @@ function printSize(d, variant){
   const cls = (S.size==="S"||S.size==="M") ? "SM" : "LXL";
   const [tw,th] = GARMENTS[S.g].box[cls];
   // hoodies (2026-11-14): every print is fitted to the hoodie box, same as the *_HD_* / 28x42 print files
-  let k = S.g==="hoodie" ? Math.min(tw/w, th/h) : Math.min(tw/nw, th/nh), W=w*k, Hc=h*k;
+  let k = (S.g==="hoodie"||d.custom) ? Math.min(tw/w, th/h) : Math.min(tw/nw, th/nh), W=w*k, Hc=h*k;
   const fit = Math.min(1, tw/W, th/Hc); W*=fit; Hc*=fit;
   return [W,Hc,cls];
 }
@@ -355,7 +376,7 @@ async function compose(c2d, sc, alive){
   if(c2d.canvas.width!==W||c2d.canvas.height!==H){ c2d.canvas.width=W; c2d.canvas.height=H; }
   c2d.drawImage(img,0,0);
   const d=S.d, vkey=vk(d); if(!vkey) return {};
-  const pimg=await loadImg((sc>1?"p2/":"p/")+d.v[vkey][0]+".webp"); if(!alive()) return null;
+  const pimg=d.custom ? (d.img||customPlaceholder()) : await loadImg((sc>1?"p2/":"p/")+d.v[vkey][0]+".webp"); if(!alive()) return null;
   const [wcm,hcm]=printSize(d,vkey);
   // the photo is a size L garment: scale by chest width so the print sits on the shirt in the true proportion for the chosen size
   const kz=CHEST.L/CHEST[S.size], cm=geo.pxcm*kz;
@@ -403,6 +424,11 @@ async function compose(c2d, sc, alive){
   }
   return {wcm,hcm};
 }
+function customPlaceholder(){ // dashed box shown until the customer uploads their design
+  const c=document.createElement("canvas"); c.width=400; c.height=500; const x=c.getContext("2d"), ink=COLOURS[S.c].group==="light"?"#2a2a2a":"#f5f1ea";
+  x.strokeStyle=ink; x.globalAlpha=.8; x.lineWidth=6; x.setLineDash([22,14]); x.strokeRect(6,6,388,488);
+  x.setLineDash([]); x.fillStyle=ink; x.textAlign="center"; x.font="700 120px sans-serif"; x.fillText("+",200,250);
+  x.font="600 38px sans-serif"; x.fillText("YOUR DESIGN",200,330); x.font="500 26px sans-serif"; x.fillText("upload it below",200,375); return c; }
 let token=0;
 async function render(){
   const my=++token; $("busy").hidden=false;
@@ -458,22 +484,22 @@ addEventListener("resize",()=>{ if(Z.open) zFit(); });
 function chip(label,sub,pressed,on){const b=document.createElement("button");b.type="button";b.className="chip";b.setAttribute("aria-pressed",pressed);b.innerHTML=label+(sub?`<small>${sub}</small>`:"");b.onclick=on;return b;}
 function drawGarments(){const el=$("garments");el.replaceChildren(...Object.entries(GARMENTS).map(([k,g])=>chip(g.name,(typeof PRICES[k]==="object"?"from ":"")+rs(fromPrice(k)),S.g===k,()=>{S.g=k; if(!g.colours[S.c]) S.c=Object.keys(g.colours)[0]; refresh();})));}
 function drawColours(){const el=$("colours");el.replaceChildren(...Object.keys(GARMENTS[S.g].colours).map(c=>{const b=document.createElement("button");b.type="button";b.className="sw";b.style.background=COLOURS[c].hex;b.title=COLOURS[c].name;b.setAttribute("aria-label",COLOURS[c].name);b.setAttribute("aria-pressed",S.c===c);b.onclick=()=>{S.c=c;refresh();};return b;}));$("colourName").textContent=COLOURS[S.c].name+(Object.keys(GARMENTS[S.g].colours).length<2?" (more colours soon)":"");}
-function vk(d){const bk=GARMENTS[S.g].colours[S.c], g=COLOURS[S.c].group; return d&&(d.v[bk]?bk:(d.v[g]?g:null));}
-function available(){const l=D.filter(d=>vk(d)); return S.g==="hoodie"?[...l.filter(d=>d.cat==="hood"),...l.filter(d=>d.cat!=="hood")]:l;}
+function vk(d){if(d&&d.custom) return "custom"; const bk=GARMENTS[S.g].colours[S.c], g=COLOURS[S.c].group; return d&&(d.v[bk]?bk:(d.v[g]?g:null));}
+function available(){const l=D.filter(d=>vk(d)); return [CUSTOM,...(S.g==="hoodie"?[...l.filter(d=>d.cat==="hood"),...l.filter(d=>d.cat!=="hood")]:l)];}
 function drawPrints(){
   const g=COLOURS[S.c].group, list=available();
   const cats=["all",...Object.keys(CATS).filter(c=>c!=="all"&&list.some(d=>d.cat===c))];
   if(!cats.includes(S.cat)) S.cat="all";
   $("filter").replaceChildren(...cats.map(c=>chip(CATS[c],"",S.cat===c,()=>{S.cat=c;drawPrints();})));
-  if(!S.d||!vk(S.d)) S.d = (S.g==="skinner"?list.find(d=>d.cat==="gym"):null) || list[0];
-  $("prints").replaceChildren(...list.filter(d=>S.cat==="all"||d.cat===S.cat).map(d=>{
+  if(!S.d||!vk(S.d)) S.d = (S.g==="skinner"?list.find(d=>d.cat==="gym"):null) || list[1];
+  $("prints").replaceChildren(...list.filter(d=>d.custom||S.cat==="all"||d.cat===S.cat).map(d=>{
     const b=document.createElement("button");b.type="button";b.className="pc";b.setAttribute("aria-pressed",S.d===d);
-    b.innerHTML=`<div class="th ${g}"${d.cat==="hood"?` style="background:${COLOURS[S.c].hex}"`:""}><img loading="lazy" src="t/${d.v[vk(d)][0]}.webp" alt=""></div><div class="cd">${d.code}</div><div class="nm">${d.name}</div>`;
+    b.innerHTML=d.custom?`<div class="th cu"><div style="text-align:center">+<small>YOUR DESIGN</small></div></div><div class="cd">CUSTOM</div><div class="nm">Your own design (+${rs(CUSTOM_FEE)})</div>`:`<div class="th ${g}"${d.cat==="hood"?` style="background:${COLOURS[S.c].hex}"`:""}><img loading="lazy" src="t/${d.v[vk(d)][0]}.webp" alt=""></div><div class="cd">${d.code}</div><div class="nm">${d.name}</div>`;
     b.onclick=()=>selectDesign(d);return b;}));
 }
 // ---- quick switch (2026-11-17): garment / colour / design strips under the mockup, arrows, swipe -------
 const SHORT={tee:"Tee",hoodie:"Hoodie",skinner:"Arm-cut",longsleeve:"Long sleeve"};
-function selectDesign(d){S.d=d;drawPrints();drawQuick();render();updateMsg();}
+function selectDesign(d){S.d=d;drawPrints();drawQuick();drawCustom();render();updateMsg();}
 function stepDesign(dir){const l=available(); if(!l.length) return; const i=Math.max(0,l.indexOf(S.d)); selectDesign(l[(i+dir+l.length)%l.length]);}
 function centre(el,btn,smooth){ if(!btn||!el.clientWidth) return; el.scrollTo({left:btn.offsetLeft-(el.clientWidth-btn.offsetWidth)/2,behavior:smooth?"smooth":"auto"}); }
 (function(){var mq=matchMedia("(max-width:860px)"),on=false;function chk(){var pn=document.querySelector(".panel");var want=mq.matches&&pn&&pn.getBoundingClientRect().top<-40;if(want!==on){on=want;document.body.classList.toggle("compact",on);}}addEventListener("scroll",chk,{passive:true});addEventListener("resize",chk);})();
@@ -485,7 +511,7 @@ function drawQuick(){
   let sel=null;
   qd.replaceChildren(...available().map(d=>{const b=document.createElement("button");b.type="button";b.className="th "+g;if(d.cat==="hood")b.style.background=COLOURS[S.c].hex;
     b.title=d.code+" "+d.name;b.setAttribute("aria-label",d.code+" "+d.name);b.setAttribute("aria-pressed",S.d===d);if(S.d===d)sel=b;
-    b.innerHTML=`<img loading="lazy" src="t/${d.v[vk(d)][0]}.webp" alt="">`;b.onclick=()=>selectDesign(d);return b;}));
+    b.innerHTML=d.custom?`<div style="text-align:center">+<small>YOUR<br>DESIGN</small></div>`:`<img loading="lazy" src="t/${d.v[vk(d)][0]}.webp" alt="">`;if(d.custom)b.className="th cu";b.onclick=()=>selectDesign(d);return b;}));
   requestAnimationFrame(()=>{centre(qd,sel,true);centre(qc,qc.querySelector('[aria-pressed="true"]'));centre(qg,qg.querySelector('[aria-pressed="true"]'));});
 }
 (function(){
@@ -514,7 +540,10 @@ function updateMsg(wcm,hcm){
   const fab=typeof PRICES[S.g]==="object"?`, ${FABRICS[S.gsm]}`:"", up=unitPrice(), tot=up*S.qty;
   $("total").textContent=rs(tot); $("each").textContent=S.qty>1?`${S.qty} × ${rs(up)} · free delivery`:"Free delivery included";
   const lines=["GINI order",`Garment: ${g.name}${fab} (${COLOURS[S.c].name})`,`Size: ${S.size}`,
-    d?`Design: ${d.code} ${d.name}`:"Design: -", d?`Back print: ${lastSize[0].toFixed(1)} x ${lastSize[1].toFixed(1)} cm`:"",
+    d&&d.custom?`Design: CUSTOM, my own design${d.file?" ("+d.file+")":""}. I will send the image in this chat`:(d?`Design: ${d.code} ${d.name}`:"Design: -"),
+    d&&d.custom&&$("custNote").value.trim()?`Idea: ${$("custNote").value.trim()}`:"",
+    d&&d.custom?`Print area up to: ${lastSize[0].toFixed(1)} x ${lastSize[1].toFixed(1)} cm`:(d?`Back print: ${lastSize[0].toFixed(1)} x ${lastSize[1].toFixed(1)} cm`:""),
+    d&&d.custom?`Custom design fee ${rs(CUSTOM_FEE)} included. Ready in ${CUSTOM_DAYS} after confirmation`:"",
     `Quantity: ${S.qty}`, `Price: ${S.qty>1?S.qty+" x "+rs(up)+" = ":""}${rs(tot)} (free delivery)`, nm?`Name: ${nm}`:"", city?`City: ${city}`:""].filter(Boolean);
   const text=lines.join("\n"); $("msg").textContent=text;
   const wa=$("wa"); $("mtotal").textContent=rs(tot);
@@ -525,7 +554,14 @@ function updateMsg(wcm,hcm){
 }
 function drawFabric(){const el=$("fabric"), p=PRICES[S.g]; el.hidden=typeof p!=="object"; if(el.hidden) return;
   el.replaceChildren(...Object.keys(p).map(k=>chip(FABRICS[k],rs(p[k]),S.gsm===k,()=>{S.gsm=k;drawFabric();updateMsg();updateSpec(...lastSize);})));}
-function refresh(){drawGarments();drawFabric();drawColours();drawPrints();drawQuick();drawSizes();render();updateMsg();}
+function drawCustom(){const on=!!(S.d&&S.d.custom); $("custStep").hidden=!on; if(!on) return;
+  $("custFee").innerHTML=`Your own design adds <b>${rs(CUSTOM_FEE)}</b> and takes <b>${CUSTOM_DAYS}</b>, because we prepare and print it just for you. <span class="si">ඔයාගේම design එකකට ${rs(CUSTOM_FEE)}ක් වැඩිපුර, දවස් ටිකක් වැඩිපුර යනවා.</span><br>After you tap Order on WhatsApp, send your image in the same chat.`;}
+$("custFile").onchange=e=>{const f=e.target.files&&e.target.files[0]; if(!f) return; const u=URL.createObjectURL(f), im=new Image();
+  im.onload=()=>{CUSTOM.img=im; CUSTOM.file=f.name; CUSTOM.v.custom=[null,im.width/Math.max(1,im.height),1]; $("custThumb").src=u; $("custThumb").hidden=false;
+    $("custName").textContent=f.name+" · send this image on WhatsApp after ordering"; render(); updateMsg();};
+  im.src=u;};
+$("custNote").oninput=()=>updateMsg();
+function refresh(){drawGarments();drawFabric();drawColours();drawPrints();drawQuick();drawCustom();drawSizes();render();updateMsg();}
 $("qm").onclick=()=>{S.qty=Math.max(1,S.qty-1);$("qv").textContent=S.qty;updateMsg();};
 $("qp").onclick=()=>{S.qty=Math.min(20,S.qty+1);$("qv").textContent=S.qty;updateMsg();};
 $("nm").oninput=$("city").oninput=()=>updateMsg();

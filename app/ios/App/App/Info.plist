@@ -8,6 +8,10 @@
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>Take a photo of your own design to send with your order.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Pick your own design image to preview it on the garment.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Save your GINI design mockup to Photos.</string>
   <key>CAPACITOR_DEBUG</key>
