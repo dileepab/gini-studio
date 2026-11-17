@@ -1,5 +1,5 @@
 // Builds app/www from the Custom Studio site in the repo root (the same files GitHub Pages serves).
-// - copies index.html + garment bases (b/), prints (p/), thumbs (t/)
+// - copies index.html + garment bases (b/), prints (p/), thumbs (t/), HD zoom files (b2/, p2/)
 // - swaps Google Fonts for local copies (works with no internet)
 // - drops the service worker and web-manifest tags (the app already has every file inside it)
 // - adds native/native.js + native.css (WhatsApp in the WhatsApp app, share/save mockup, back button, haptics)
@@ -10,7 +10,7 @@ const root = path.join(app, "..");
 const www = path.join(app, "www");
 fs.rmSync(www, { recursive: true, force: true });
 fs.mkdirSync(www, { recursive: true });
-for (const d of ["b", "p", "t"]) fs.cpSync(path.join(root, d), path.join(www, d), { recursive: true });
+for (const d of ["b", "p", "t", "b2", "p2"]) if (fs.existsSync(path.join(root, d))) fs.cpSync(path.join(root, d), path.join(www, d), { recursive: true });
 fs.cpSync(path.join(app, "vendor", "fonts"), path.join(www, "fonts"), { recursive: true });
 fs.copyFileSync(path.join(app, "vendor", "fonts.css"), path.join(www, "fonts.css"));
 for (const f of ["native.js", "native.css"]) fs.copyFileSync(path.join(app, "native", f), path.join(www, f));

@@ -50,9 +50,11 @@
     save.addEventListener("click", function (e) {
       e.preventDefault(); e.stopImmediatePropagation();
       var cv = $("cv"); if (!cv || !P.Filesystem || !P.Share) return;
-      var data = cv.toDataURL("image/jpeg", 0.92).split(",")[1];
       var name = "gini-mockup-" + Date.now() + ".jpg";
-      P.Filesystem.writeFile({ path: name, data: data, directory: "CACHE" })
+      // HD mockup (1800 px) when the page offers it, else the on-screen canvas
+      (window.giniHD ? window.giniHD() : Promise.resolve(null))
+        .then(function (u) { return (u || cv.toDataURL("image/jpeg", 0.92)).split(",")[1]; })
+        .then(function (data) { return P.Filesystem.writeFile({ path: name, data: data, directory: "CACHE" }); })
         .then(function (r) {
           return P.Share.share({ title: "My GINI design", text: "My GINI design from GINI Studio", files: [r.uri], dialogTitle: "Share or save your design" });
         })
@@ -62,8 +64,9 @@
 
   // "Copy order": native clipboard is not needed; the page's own copy works in the app web view.
 
-  // Android back button: close the open preview, else go back, else leave the app.
+  // Android back button: close the zoom view or the open preview, else go back, else leave the app.
   if (P.App) P.App.addListener("backButton", function (ev) {
+    if (window.giniCloseZoom && window.giniCloseZoom()) return;
     var w = $("saveWrap");
     if (w && !w.hidden) { w.hidden = true; return; }
     if (ev && ev.canGoBack) history.back(); else P.App.minimizeApp ? P.App.minimizeApp() : P.App.exitApp();
