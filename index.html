@@ -105,10 +105,29 @@ input.t:focus,.chip:focus-visible,.pc:focus-visible,.sw:focus-visible,.btn:focus
 .zbusy{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);background:rgba(21,18,17,.8);font-size:12px;padding:5px 12px;border-radius:99px}
 html.zoom-open,html.zoom-open body{overflow:hidden}
 .mbar{display:none}
+.frame{touch-action:pan-y}
+.nav{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(21,18,17,.55);color:#fff;font:400 26px/1 var(--body);cursor:pointer;display:grid;place-items:center;padding:0 0 3px}
+.nav.prev{left:8px}.nav.next{right:8px}
+.nav:hover{background:rgba(21,18,17,.8)}
+.quick{display:none}
 @media (max-width:860px){
   /* phone: the garment fills the width (side wall cropped), bigger and easier to read */
-  .frame{width:100%;height:min(40vh,520px);aspect-ratio:auto}
+  .frame{width:100%;height:min(34vh,460px);aspect-ratio:auto}
+  .stage .spec{display:none}
+  .quick{display:grid;gap:6px;margin-top:8px}
+  .qrow{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:3px 2px}
+  .qrow::-webkit-scrollbar{display:none}
+  .qg button{flex:none;appearance:none;border:1px solid var(--line);background:var(--char);color:var(--bone);font:500 13px var(--body);padding:7px 13px;border-radius:99px;cursor:pointer}
+  .qg button[aria-pressed="true"]{border-color:var(--ember);background:var(--ember);color:#1a0f08;font-weight:600}
+  .qc{padding:5px 4px;gap:10px}
+  .qc .sw{flex:none;width:30px;height:30px}
+  .qd button{flex:none;width:60px;height:60px;border-radius:6px;border:2px solid var(--line);padding:0;overflow:hidden;cursor:pointer;display:grid;place-items:center}
+  .qd button img{max-width:86%;max-height:86%;object-fit:contain}
+  .qd button[aria-pressed="true"]{border-color:var(--ember);box-shadow:0 0 0 1px var(--ember)}
   .frame canvas{object-fit:cover;object-position:50% 60%}
+  body.compact .frame{height:min(24vh,300px)}
+  body.compact .qd button{width:52px;height:52px}
+  .frame{transition:height .2s ease}
   .chip{padding:10px 14px;min-height:44px}
   .prints{grid-template-columns:repeat(3,minmax(0,1fr))}
   .mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:20;align-items:center;justify-content:space-between;gap:12px;
@@ -130,8 +149,9 @@ html.zoom-open,html.zoom-open body{overflow:hidden}
 
   <div class="grid">
     <section class="stage" aria-label="Live mockup">
-      <div class="frame" id="frame"><canvas id="cv" width="900" height="1205" role="img" aria-label="Mockup of the selected garment with the selected print"></canvas><div class="busy" id="busy">Loading…</div><button type="button" class="zbtn" id="zbtn" aria-label="Zoom in on the mockup"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21M10.5 7.5v6M7.5 10.5h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Zoom</button></div>
+      <div class="frame" id="frame"><canvas id="cv" width="900" height="1205" role="img" aria-label="Mockup of the selected garment with the selected print"></canvas><div class="busy" id="busy">Loading…</div><button type="button" class="nav prev" id="dprev" aria-label="Previous design">‹</button><button type="button" class="nav next" id="dnext" aria-label="Next design">›</button><button type="button" class="zbtn" id="zbtn" aria-label="Zoom in on the mockup"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21M10.5 7.5v6M7.5 10.5h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Zoom</button></div>
       <div class="spec" id="spec"></div>
+      <div class="quick" id="quick" aria-label="Quick change"><div class="qrow qg" id="qg"></div><div class="qrow qc" id="qc"></div><div class="qrow qd" id="qd"></div></div>
     </section>
 
     <section class="panel">
@@ -431,7 +451,6 @@ addEventListener("resize",()=>{ if(Z.open) zFit(); });
   $("zclose").onclick=()=>closeZoom();
   $("zin").onclick=()=>{ const r=v.getBoundingClientRect(); zAt(Z.s*1.6,r.left+r.width/2,r.top+r.height/2); };
   $("zout").onclick=()=>{ const r=v.getBoundingClientRect(); zAt(Z.s/1.6,r.left+r.width/2,r.top+r.height/2); };
-  $("frame").addEventListener("click",openZoom);
   $("zbtn").addEventListener("click",e=>{ e.stopPropagation(); openZoom(); });
 })();
 
@@ -450,8 +469,37 @@ function drawPrints(){
   $("prints").replaceChildren(...list.filter(d=>S.cat==="all"||d.cat===S.cat).map(d=>{
     const b=document.createElement("button");b.type="button";b.className="pc";b.setAttribute("aria-pressed",S.d===d);
     b.innerHTML=`<div class="th ${g}"${d.cat==="hood"?` style="background:${COLOURS[S.c].hex}"`:""}><img loading="lazy" src="t/${d.v[vk(d)][0]}.webp" alt=""></div><div class="cd">${d.code}</div><div class="nm">${d.name}</div>`;
-    b.onclick=()=>{S.d=d;drawPrints();render();updateMsg();};return b;}));
+    b.onclick=()=>selectDesign(d);return b;}));
 }
+// ---- quick switch (2026-11-17): garment / colour / design strips under the mockup, arrows, swipe -------
+const SHORT={tee:"Tee",hoodie:"Hoodie",skinner:"Arm-cut",longsleeve:"Long sleeve"};
+function selectDesign(d){S.d=d;drawPrints();drawQuick();render();updateMsg();}
+function stepDesign(dir){const l=available(); if(!l.length) return; const i=Math.max(0,l.indexOf(S.d)); selectDesign(l[(i+dir+l.length)%l.length]);}
+function centre(el,btn,smooth){ if(!btn||!el.clientWidth) return; el.scrollTo({left:btn.offsetLeft-(el.clientWidth-btn.offsetWidth)/2,behavior:smooth?"smooth":"auto"}); }
+(function(){var mq=matchMedia("(max-width:860px)"),on=false;function chk(){var pn=document.querySelector(".panel");var want=mq.matches&&pn&&pn.getBoundingClientRect().top<-40;if(want!==on){on=want;document.body.classList.toggle("compact",on);}}addEventListener("scroll",chk,{passive:true});addEventListener("resize",chk);})();
+function drawQuick(){
+  const qg=$("qg"), qc=$("qc"), qd=$("qd"), g=COLOURS[S.c].group;
+  qg.replaceChildren(...Object.keys(GARMENTS).map(k=>{const b=document.createElement("button");b.type="button";b.textContent=SHORT[k]||GARMENTS[k].name;b.setAttribute("aria-pressed",S.g===k);
+    b.onclick=()=>{S.g=k; if(!GARMENTS[k].colours[S.c]) S.c=Object.keys(GARMENTS[k].colours)[0]; refresh();};return b;}));
+  qc.replaceChildren(...Object.keys(GARMENTS[S.g].colours).map(c=>{const b=document.createElement("button");b.type="button";b.className="sw";b.style.background=COLOURS[c].hex;b.title=COLOURS[c].name;b.setAttribute("aria-label",COLOURS[c].name);b.setAttribute("aria-pressed",S.c===c);b.onclick=()=>{S.c=c;refresh();};return b;}));
+  let sel=null;
+  qd.replaceChildren(...available().map(d=>{const b=document.createElement("button");b.type="button";b.className="th "+g;if(d.cat==="hood")b.style.background=COLOURS[S.c].hex;
+    b.title=d.code+" "+d.name;b.setAttribute("aria-label",d.code+" "+d.name);b.setAttribute("aria-pressed",S.d===d);if(S.d===d)sel=b;
+    b.innerHTML=`<img loading="lazy" src="t/${d.v[vk(d)][0]}.webp" alt="">`;b.onclick=()=>selectDesign(d);return b;}));
+  requestAnimationFrame(()=>{centre(qd,sel,true);centre(qc,qc.querySelector('[aria-pressed="true"]'));centre(qg,qg.querySelector('[aria-pressed="true"]'));});
+}
+(function(){
+  const f=$("frame"); let sx=0,sy=0,act=false,swiped=false;
+  f.addEventListener("pointerdown",e=>{sx=e.clientX;sy=e.clientY;act=true;swiped=false;});
+  f.addEventListener("pointerup",e=>{ if(!act) return; act=false; const dx=e.clientX-sx, dy=e.clientY-sy;
+    if(Math.abs(dx)>40&&Math.abs(dx)>1.5*Math.abs(dy)){ swiped=true; stepDesign(dx<0?1:-1); } });
+  f.addEventListener("pointercancel",()=>{act=false;});
+  f.addEventListener("click",e=>{ if(swiped){swiped=false;return;} if(e.target.closest(".nav")) return; openZoom(); });
+  $("dprev").addEventListener("click",e=>{e.stopPropagation();stepDesign(-1);});
+  $("dnext").addEventListener("click",e=>{e.stopPropagation();stepDesign(1);});
+  addEventListener("keydown",e=>{ if(Z.open||/INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
+    if(e.key==="ArrowRight") stepDesign(1); else if(e.key==="ArrowLeft") stepDesign(-1); });
+})();
 function drawSizes(){$("sizes").replaceChildren(...SIZES.map(z=>chip(z,"",S.size===z,()=>{S.size=z;drawSizes();render();updateMsg();})));
   $("sizeNote").textContent=(S.size==="S"||S.size==="M")?"S and M get a smaller print (34 cm on a tee), so it covers the same share of the back as on L.":"L and XL get the full-size print (38 cm on a tee).";}
 function updateSpec(wcm,hcm){
@@ -477,7 +525,7 @@ function updateMsg(wcm,hcm){
 }
 function drawFabric(){const el=$("fabric"), p=PRICES[S.g]; el.hidden=typeof p!=="object"; if(el.hidden) return;
   el.replaceChildren(...Object.keys(p).map(k=>chip(FABRICS[k],rs(p[k]),S.gsm===k,()=>{S.gsm=k;drawFabric();updateMsg();updateSpec(...lastSize);})));}
-function refresh(){drawGarments();drawFabric();drawColours();drawPrints();drawSizes();render();updateMsg();}
+function refresh(){drawGarments();drawFabric();drawColours();drawPrints();drawQuick();drawSizes();render();updateMsg();}
 $("qm").onclick=()=>{S.qty=Math.max(1,S.qty-1);$("qv").textContent=S.qty;updateMsg();};
 $("qp").onclick=()=>{S.qty=Math.min(20,S.qty+1);$("qv").textContent=S.qty;updateMsg();};
 $("nm").oninput=$("city").oninput=()=>updateMsg();
