@@ -248,7 +248,7 @@ function fromPrice(k){const p=PRICES[k]; return typeof p==="object"?Math.min(...
 const GARMENTS = {
   tee:      {name:"Oversized tee", si:"Oversized T-shirt", box:{SM:[34,49], LXL:[38,55]}, disp:9,
              colours:{black:"tee_black", white:"tee_white"}},
-  hoodie:   {name:"Hoodie", si:"Hoodie", box:{SM:[25,38], LXL:[28,42]}, disp:8,
+  hoodie:   {name:"Hoodie", si:"Hoodie", box:{SM:[29,42], LXL:[32,46]}, disp:8,
              colours:{black:"hoodie_black", white:"hoodie_white", cream:"hoodie_cream", grey:"hoodie_grey", sage:"hoodie_sage", pink:"hoodie_pink", rose:"hoodie_rose", red:"hoodie_red"}},
   skinner:  {name:"Arm-cut (skinner)", si:"Gym arm-cut", box:{SM:[24,30], LXL:[26,32.5]}, disp:5,
              colours:{black:"skinner_black", white:"skinner_white"}},
@@ -384,7 +384,7 @@ async function compose(c2d, sc, alive){
   const kz=CHEST.L/CHEST[S.size], cm=geo.pxcm*kz;
   let by=geo.top;
   const boxH=GARMENTS[S.g].box[(S.size==="S"||S.size==="M")?"SM":"LXL"][1], shortP=hcm<0.5*boxH;
-  if(geo.hood){ const tip=Math.max(...geo.hood.map(p=>p[1])); by=tip+2*cm; }  // hoodies (2026-11-14): print top 2 cm below the hood tip
+  if(geo.hood){ const tip=Math.max(...geo.hood.map(p=>p[1])); by=tip-Math.min(5,0.25*hcm)*cm; }  // hoodies (2026-11-17, Dileepa chose): print box 32x46 (S/M 29x42), top tucks up to 5 cm under the hood (max 25% of the print)
   else if(shortP){ by=by+(0.5*boxH-hcm)*0.35*cm; } // short prints drop a little so they sit on the upper back, not on the collar
   const bw=Math.round(wcm*cm*sc), bh=Math.round(hcm*cm*sc), bx=Math.round(geo.cx*sc-bw/2); by=Math.round(by*sc);
   // base luminance around the print (pad covers the wide blur)
