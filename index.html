@@ -60,8 +60,8 @@ header.top{display:flex;align-items:baseline;justify-content:space-between;gap:1
 .swlabel{font-size:13px;color:var(--smoke);margin-top:8px}
 .prints{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
 .pc{appearance:none;border:1px solid var(--line);background:var(--char);border-radius:4px;padding:6px 6px 8px;cursor:pointer;color:var(--bone);text-align:left;display:flex;flex-direction:column;gap:6px;min-width:0}
-.pc .th{aspect-ratio:1;display:grid;place-items:center;border-radius:2px;overflow:hidden}
-.pc .th img{max-width:88%;max-height:88%;object-fit:contain}
+.pc .th{aspect-ratio:1;display:grid;grid-template:minmax(0,1fr)/minmax(0,1fr);place-items:center;border-radius:2px;overflow:hidden}
+.pc .th img{width:88%;height:88%;object-fit:contain}
 .pc .nm{font-size:12px;line-height:1.25}
 .pc .cd{font-size:10px;letter-spacing:.1em;color:var(--smoke);font-variant-numeric:tabular-nums}
 .pc[aria-pressed="true"]{border-color:var(--ember);box-shadow:inset 0 0 0 1px var(--ember)}
@@ -134,8 +134,8 @@ html.zoom-open,html.zoom-open body{overflow:hidden}
   .qg button[aria-pressed="true"]{border-color:var(--ember);background:var(--ember);color:#1a0f08;font-weight:600}
   .qc{padding:5px 4px;gap:10px}
   .qc .sw{flex:none;width:30px;height:30px}
-  .qd button{flex:none;width:60px;height:60px;border-radius:6px;border:2px solid var(--line);padding:0;overflow:hidden;cursor:pointer;display:grid;place-items:center}
-  .qd button img{max-width:86%;max-height:86%;object-fit:contain}
+  .qd button{flex:none;width:60px;height:60px;border-radius:6px;border:2px solid var(--line);padding:0;overflow:hidden;cursor:pointer;display:grid;grid-template:minmax(0,1fr)/minmax(0,1fr);place-items:center}
+  .qd button img{width:86%;height:86%;object-fit:contain}
   .qd button[aria-pressed="true"]{border-color:var(--ember);box-shadow:0 0 0 1px var(--ember)}
   .frame canvas{object-fit:cover;object-position:50% 60%}
   body.compact .frame{height:min(24vh,300px)}
@@ -350,6 +350,17 @@ const D = [
  ["Gorilla Fire Splash","gym",G,{dark:["g01_gorilla_fire_splash_v1",37.9,38.0]},1],
  ["Sloth Bear Ink","gym",G,{dark:["g02_lk_sloth_bear_ink_v1",35.2,44.9]},1],
  ["Leopard Roar Fire","gym",G,{dark:["g04_lk_leopard_roar_fire_v1",34.8,44.9]},1],
+ // Drop 04 Pinterest viral additions (2026-11-18, GN-61..GN-70 appended at end so GN-01..GN-60 stay unchanged)
+ ["No Shortcuts Limitless","type",T,{dark:["p01_no_shortcuts_v2",35.4,54.8]}],
+ ["Galle Road Midnight Run","type",T,{dark:["p02_galle_rd_midnight_v1",37.9,44.9]}],
+ ["Yala Filigree Leopard","big",T,{dark:["p03_yala_filigree_leopard_v1_dark",37.7,52.3],red:["p03_yala_filigree_leopard_v1_dark",37.7,52.3],light:["p03_yala_filigree_leopard_v1_light",37.7,52.3]}],
+ ["Ella Rise Above","type",T,{dark:["p04_ella_rise_above_v1",37.9,51.2]}],
+ ["Discipline Over Excuses","gym",G,{dark:["p05_lk_discipline_gym_v2",35.1,54.8]},1],
+ ["Lanka Black Eagle","ink",T,{dark:["p06_lanka_black_eagle_v1_dark",15.1,54.7],red:["p06_lanka_black_eagle_v1_dark",15.1,54.7],light:["p06_lanka_black_eagle_v1_light",15.1,54.7]}],
+ ["Sinharaja Rooted","ink",T,{light:["p07_sinharaja_rooted_v1",32.0,54.8]}],
+ ["Angampora Ember Warrior","ink",T,{light:["p08_angampora_ember_v1",37.8,49.4]}],
+ ["Knuckles Sambar Woodcut","ink",T,{dark:["p09_knuckles_sambar_woodcut_v2_dark",37.5,54.6],red:["p09_knuckles_sambar_woodcut_v2_dark",37.5,54.6],light:["p09_knuckles_sambar_woodcut_v2_light",37.5,54.6]}],
+ ["Ceylon Untamed","type",T,{light:["p10_ceylon_untamed_v1",37.8,24.8]}],
 ].map((d,i)=>({name:d[0],cat:d[1],native:d[2],v:d[3],fit:!!d[4],code:"GN-"+String(i+1).padStart(2,"0")}));
 const NATIVE_BOX = {tee:[38,55], gym:[26,32.5], hoodie:[32,46]};
 const CATS = {all:"All", glow:"Glow & riders", street:"Street & mindset", hood:"Hoodie collection", big:"Big cats & tuskers", skull:"Skulls & dark", ink:"Ink & watercolour", type:"Type & graphic", gym:"Gym"};
