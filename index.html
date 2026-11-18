@@ -465,21 +465,19 @@ function trimAlpha(c){ // crop to the visible art so it fills the print box
   const x=c.getContext("2d"), id=x.getImageData(0,0,c.width,c.height), P=id.data; let x0=c.width,y0=c.height,x1=-1,y1=-1;
   for(let y=0;y<c.height;y++)for(let i=0;i<c.width;i++) if(P[(y*c.width+i)*4+3]>24){ if(i<x0)x0=i; if(i>x1)x1=i; if(y<y0)y0=y; if(y>y1)y1=y; }
   if(x1<0) return c; const o=document.createElement("canvas"); o.width=x1-x0+1; o.height=y1-y0+1; o.getContext("2d").drawImage(c,-x0,-y0); return o; }
-function halftone(c, dark){ // dots sized by ink coverage; on dark shirts near-black ink drops out (the shirt shows), on light shirts near-white does
-  const w=c.width,h=c.height, P=c.getContext("2d").getImageData(0,0,w,h).data, cell=Math.max(3,Math.round(Math.max(w,h)/190));
-  const o=document.createElement("canvas"); o.width=w; o.height=h; const x=o.getContext("2d");
-  for(let cy=0;cy<h;cy+=cell)for(let cx=0;cx<w;cx+=cell){ let r=0,g=0,b=0,a=0,n=0;
-    for(let y=cy;y<Math.min(h,cy+cell);y++)for(let i=cx;i<Math.min(w,cx+cell);i++){const k=(y*w+i)*4,al=P[k+3]/255; r+=P[k]*al; g+=P[k+1]*al; b+=P[k+2]*al; a+=al; n++;}
-    if(a<0.02*n) continue; r/=a; g/=a; b/=a; const A=a/n, L=(r*.299+g*.587+b*.114)/255;
-    const ink=dark?Math.min(1,Math.max(0,(L-0.05)/0.14)):Math.min(1,Math.max(0,(0.95-L)/0.14)), cov=A*ink; if(cov<0.04) continue;
-    x.fillStyle=`rgb(${r|0},${g|0},${b|0})`;
-    if(cov>0.9){ x.fillRect(cx,cy,cell,cell); continue; }
-    x.beginPath(); x.arc(cx+cell/2,cy+cell/2,cell*0.5*Math.sqrt(cov)*1.25,0,7); x.fill(); }
-  return o; }
+function halftone(c, dark){ // keeps every pixel's own colour (full detail); only the fading / near-shirt-colour parts turn into a 45° dot screen, like the real print files
+  const w=c.width,h=c.height, x=c.getContext("2d"), id=x.getImageData(0,0,w,h), P=id.data, s=Math.max(4,Math.max(w,h)/170), k=Math.PI/s;
+  for(let y=0;y<h;y++)for(let i=0;i<w;i++){ const o=(y*w+i)*4, A=P[o+3]/255; if(!A) continue;
+    const L=(P[o]*.299+P[o+1]*.587+P[o+2]*.114)/255;
+    const ink=dark?Math.min(1,Math.max(0,(L-0.03)/0.09)):Math.min(1,Math.max(0,(0.97-L)/0.09)), cov=A*ink;
+    if(cov>=0.96){ P[o+3]=255*A|0; continue; }
+    const thr=(2-Math.cos((i+y)*k)-Math.cos((i-y)*k))/4; // 0 at dot centres, 1 between dots
+    P[o+3]=255*Math.max(0,Math.min(1,(cov-thr)/0.09+0.5))|0; }
+  x.putImageData(id,0,0); return c; }
 function customArt(){ // processed upload for the current shirt colour, cached
   const dark=COLOURS[S.c].group!=="light", bgOn=$("custBg").checked, htOn=$("custHt").checked, key=[dark,bgOn,htOn].join();
   if(CUSTOM.art&&CUSTOM.artKey===key) return CUSTOM.art;
-  const im=CUSTOM.src, k=Math.min(1,1100/Math.max(im.width,im.height)), w=Math.max(1,Math.round(im.width*k)), h=Math.max(1,Math.round(im.height*k));
+  const im=CUSTOM.src, k=Math.min(1,1600/Math.max(im.width,im.height)), w=Math.max(1,Math.round(im.width*k)), h=Math.max(1,Math.round(im.height*k));
   let c=document.createElement("canvas"); c.width=w; c.height=h; const x=c.getContext("2d",{willReadFrequently:true}); x.drawImage(im,0,0,w,h);
   if(bgOn){ const id=x.getImageData(0,0,w,h); cutBackground(id,w,h); x.putImageData(id,0,0); c=trimAlpha(c); }
   if(htOn) c=halftone(c,dark);
