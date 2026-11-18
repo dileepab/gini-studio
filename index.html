@@ -35,7 +35,7 @@ header.top{display:flex;align-items:baseline;justify-content:space-between;gap:1
 .tag{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--smoke)}
 .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:32px;align-items:start}
 @media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr);gap:20px}}
-.stage{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+.stage{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);min-width:0}
 @media (max-width:860px){
   .stage{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--soot);padding-block:6px 8px;border-bottom:1px solid var(--line)}
   .spec{margin-top:6px;font-size:12px;gap:2px 12px}
@@ -127,8 +127,8 @@ html.zoom-open,html.zoom-open body{overflow:hidden}
   /* phone: the garment fills the width (side wall cropped), bigger and easier to read */
   .frame{width:100%;height:min(34vh,460px);aspect-ratio:auto}
   .stage .spec{display:none}
-  .quick{display:grid;gap:6px;margin-top:8px}
-  .qrow{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:3px 2px}
+  .quick{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;margin-top:8px;min-width:0}
+  .qrow{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:3px 2px;min-width:0;max-width:100%}
   .qrow::-webkit-scrollbar{display:none}
   .qg button{flex:none;appearance:none;border:1px solid var(--line);background:var(--char);color:var(--bone);font:500 13px var(--body);padding:7px 13px;border-radius:99px;cursor:pointer}
   .qg button[aria-pressed="true"]{border-color:var(--ember);background:var(--ember);color:#1a0f08;font-weight:600}
@@ -234,7 +234,7 @@ html.zoom-open,html.zoom-open body{overflow:hidden}
     <span class="zctl"><button type="button" id="zout" aria-label="Zoom out">−</button><button type="button" id="zin" aria-label="Zoom in">+</button><button type="button" id="zclose" aria-label="Close">✕</button></span></div>
   <div class="zbusy" id="zbusy" hidden>Loading HD…</div>
 </div>
-<div class="mbar" id="mbar"><div><b id="mtotal">Rs 0</b><small>Free delivery</small></div><a class="btn wa" id="mwa" href="#" target="_blank" rel="noopener">Order on WhatsApp</a></div>
+<div class="mbar" id="mbar"><div><b id="mtotal">Rs 0</b><small id="mspec">Free delivery</small></div><a class="btn wa" id="mwa" href="#" target="_blank" rel="noopener">Order on WhatsApp</a></div>
 
 <script>
 // ---- Shop settings -------------------------------------------------------
@@ -246,7 +246,7 @@ const FABRICS = {"220":"220 gsm", "250":"250 gsm premium"};
 const rs = n => "Rs "+n.toLocaleString("en-US");
 // Custom design (2026-11-17, Dileepa): customer sends their own design; it costs a bit more and takes a few more days
 const CUSTOM_FEE = 500, CUSTOM_DAYS = "5-7 working days";
-const CUSTOM = {name:"Your own design", code:"CUSTOM", cat:"custom", native:"tee", custom:true, img:null, file:"", v:{custom:[null,0.8,1]}};
+const CUSTOM = {name:"Your own design", code:"CUSTOM", cat:"custom", native:"tee", custom:true, src:null, art:null, artKey:"", file:"", v:{custom:[null,0.8,1]}};
 function unitPrice(){const p=PRICES[S.g]; return (typeof p==="object"?p[S.gsm]:p) + (S.d&&S.d.custom?CUSTOM_FEE:0);}
 function fromPrice(k){const p=PRICES[k]; return typeof p==="object"?Math.min(...Object.values(p)):p;}
 const GARMENTS = {
@@ -307,27 +307,27 @@ const D = [
  ["Lion with Red Drops","ink",T,{light:["w04_lion_ink_red_drops_v1",37.9,50.4]}],
  ["Jackal in Red Ink","ink",T,{light:["w05_lk_jackal_red_ink_v2",37.9,47.6]}],
  ["Navy & Mustard Leopard","ink",T,{light:["w06_lk_leopard_navy_mustard_v4",37.9,47.2]}],
- ["Obsession","type",T,{light:["w07_obsession_v1",17.0,54.8]}],
+ ["Obsession","type",T,{dark:["w07_obsession_black_skinner_v1",17.0,54.8], light:["w07_obsession_v1",17.0,54.8]}],
  ["Colombo","type",T,{dark:["s02_colombo_map_type_v1_dark",37.6,14.8], red:["s02_colombo_map_type_v1_dark",37.6,14.8], light:["s02_colombo_map_type_v1_light",37.6,14.8]}],
  ["Flame Grin","type",T,{dark:["s03_flame_scribble_grin_v1_dark",29.9,24.2], red:["s03_flame_scribble_grin_v1_dark",29.9,24.2], light:["s03_flame_scribble_grin_v1_light",29.9,24.2]}],
  ["Hanging Spider","type",T,{dark:["s06_tribal_hanging_spider_v1_dark",16.8,39.8], red:["s06_tribal_hanging_spider_v1_dark",16.8,39.8], light:["s06_tribal_hanging_spider_v1_light",16.8,39.8]}],
  ["No Pain No Gain","gym",G,{dark:["gym01_no_pain_no_gain_dark",25.9,27.9], light:["gym01_no_pain_no_gain_light",26.0,28.0]}],
  ["Sore Skull","gym",G,{dark:["gym03_skull_barbell_dark",21.3,32.4], light:["gym03_skull_barbell_light",21.4,32.5]}],
  ["Beast Mode","gym",G,{dark:["gym04_beast_mode_leopard_dark",23.9,27.3], light:["gym04_beast_mode_leopard_light",23.9,27.3]}],
- // hoodie colour sets (Drop 01): keyed by exact base, so each print shows only on the hoodie colour it was approved for
- ["Leopard Skull Lightning","hood",H,{hoodie_red:["hs_hd04_red",27.1,41.9], hoodie_black:["hs_hd04_black",27.1,41.9]}],
- ["Hawk Eagle Wings","hood",H,{hoodie_black:["hs_hd16_black",27.9,39.4]}],
- ["Thorn Wings","hood",H,{hoodie_red:["hs_hd08_red",27.9,33.9], hoodie_black:["hs_hd08_black",27.9,33.9]}],
- ["Tribal Tusker","hood",H,{hoodie_red:["hs_hd09_red",27.9,33.7], hoodie_black:["hs_hd09_black",27.9,33.7], hoodie_cream:["hs_hd09_cream",27.9,33.7], hoodie_white:["hs_hd09_white",27.9,33.7]}],
- ["Stencil Leopard Face","hood",H,{hoodie_grey:["hs_hd01_grey",27.9,30.4], hoodie_white:["hs_hd01_white",27.9,30.4], hoodie_rose:["hs_hd01_rose",27.9,30.4]}],
- ["Tusker Ink Spots","hood",H,{hoodie_grey:["hs_hd02_grey",27.6,41.9], hoodie_sage:["hs_hd02_sage",27.6,41.9], hoodie_pink:["hs_hd02_pink",27.6,41.9]}],
- ["Leopards in the Tree","hood",H,{hoodie_grey:["hs_hd03_grey",17.6,41.9]}],
- ["Ink Brush Leopard","hood",H,{hoodie_grey:["hs_hd10_grey",27.9,35.2], hoodie_sage:["hs_hd10_sage",22.6,35.2], hoodie_pink:["hs_hd10_pink",22.6,35.2], hoodie_rose:["hs_hd10_rose",22.6,35.2]}],
- ["Leopard Skeleton Flames","hood",H,{hoodie_grey:["hs_hd13_grey",27.9,38.9]}],
- ["Blade Tribal","hood",H,{hoodie_red:["hs_hd12_red",16.0,41.9], hoodie_sage:["hs_hd12_sage",16.0,41.9], hoodie_pink:["hs_hd12_pink",16.0,41.9], hoodie_rose:["hs_hd12_rose",16.0,41.9]}],
- ["Walking Tusker Ink","hood",H,{hoodie_cream:["hs_hd06_cream",27.9,23.5]}],
- ["Leopard & Na Flowers","hood",H,{hoodie_cream:["hs_hd15_cream",27.1,41.9]}],
- ["Blue Whale Ink","hood",H,{hoodie_white:["hs_hd14_white",18.8,41.9]}],
+ // hoodie colour sets (Drop 01, 2026-11-17 32x46 FINAL): keyed by exact base, so each print shows only on the hoodie colour it was approved for
+ ["Leopard Skull Lightning","hood",H,{hoodie_red:["hs_hd04_red",29.7,45.9], hoodie_black:["hs_hd04_black",29.7,45.9]}],
+ ["Hawk Eagle Wings","hood",H,{hoodie_black:["hs_hd16_black",31.9,45.0]}],
+ ["Thorn Wings","hood",H,{hoodie_red:["hs_hd08_red",31.9,38.8], hoodie_black:["hs_hd08_black",31.9,38.8]}],
+ ["Tribal Tusker","hood",H,{hoodie_red:["hs_hd09_red",31.9,38.5], hoodie_black:["hs_hd09_black",31.9,38.5], hoodie_cream:["hs_hd09_cream",31.9,38.5], hoodie_white:["hs_hd09_white",31.9,38.5]}],
+ ["Stencil Leopard Face","hood",H,{hoodie_grey:["hs_hd01_grey",31.9,34.7], hoodie_white:["hs_hd01_white",31.9,34.7], hoodie_rose:["hs_hd01_rose",31.9,34.7]}],
+ ["Tusker Ink Spots","hood",H,{hoodie_grey:["hs_hd02_grey",30.3,45.9], hoodie_sage:["hs_hd02_sage",30.3,45.9], hoodie_pink:["hs_hd02_pink",30.3,45.9]}],
+ ["Leopards in the Tree","hood",H,{hoodie_grey:["hs_hd03_grey",19.3,45.9]}],
+ ["Ink Brush Leopard","hood",H,{hoodie_grey:["hs_hd10_grey",31.9,40.3], hoodie_sage:["hs_hd10_sage",31.9,40.3], hoodie_pink:["hs_hd10_pink",31.9,40.3], hoodie_rose:["hs_hd10_rose",31.9,40.3]}],
+ ["Leopard Skeleton Flames","hood",H,{hoodie_grey:["hs_hd13_grey",31.9,44.4]}],
+ ["Blade Tribal","hood",H,{hoodie_red:["hs_hd12_red",17.5,45.9], hoodie_sage:["hs_hd12_sage",17.5,45.9], hoodie_pink:["hs_hd12_pink",17.5,45.9], hoodie_rose:["hs_hd12_rose",17.5,45.9]}],
+ ["Walking Tusker Ink","hood",H,{hoodie_cream:["hs_hd06_cream",31.9,26.8]}],
+ ["Leopard & Na Flowers","hood",H,{hoodie_cream:["hs_hd15_cream",29.7,45.9]}],
+ ["Blue Whale Ink","hood",H,{hoodie_white:["hs_hd14_white",20.6,45.9]}],
  // Drop glow 2026-11-10 (black garments, halftone files)
  ["Water Hooded","glow",T,{dark:["gl01_water_hooded_pointing_v1",37.9,47.1]}],
  ["Gold Spark B-Boy","glow",T,{dark:["gl02_breakdancer_gold_sparks_v2",37.9,49.0]}],
@@ -345,8 +345,13 @@ const D = [
  ["Beast Mode Tusker","gym",G,{dark:["k06_beast_mode_tusker_armcut_v2_dark",37.7,46.5],red:["k06_beast_mode_tusker_armcut_v2_dark",37.7,46.5],light:["k06_beast_mode_tusker_armcut_v2_light",37.7,46.5]},1],
  ["No Need to Prove","street",H,{dark:["k07_no_need_to_prove_hoodie_v2T_dark",37.6,47.3],red:["k07_no_need_to_prove_hoodie_v2T_dark",37.6,47.3],light:["k07_no_need_to_prove_hoodie_v2T_light",37.6,47.3]},1],
  ["Gamer Skill","street",T,{dark:["k08_gamer_skill_longsleeve_v1_dark",36.8,54.6],red:["k08_gamer_skill_longsleeve_v1_dark",36.8,54.6],light:["k08_gamer_skill_longsleeve_v1_light",36.8,54.6]},1],
+ // Drop 03 FINAL additions (appended at end so GN-01..GN-56 codes stay unchanged)
+ ["Black Leopard Neon","big",T,{dark:["r02_black_leopard_neon_v1",37.9,49.8]}],
+ ["Gorilla Fire Splash","gym",G,{dark:["g01_gorilla_fire_splash_v1",37.9,38.0]},1],
+ ["Sloth Bear Ink","gym",G,{dark:["g02_lk_sloth_bear_ink_v1",35.2,44.9]},1],
+ ["Leopard Roar Fire","gym",G,{dark:["g04_lk_leopard_roar_fire_v1",34.8,44.9]},1],
 ].map((d,i)=>({name:d[0],cat:d[1],native:d[2],v:d[3],fit:!!d[4],code:"GN-"+String(i+1).padStart(2,"0")}));
-const NATIVE_BOX = {tee:[38,55], gym:[26,32.5], hoodie:[28,42]};
+const NATIVE_BOX = {tee:[38,55], gym:[26,32.5], hoodie:[32,46]};
 const CATS = {all:"All", glow:"Glow & riders", street:"Street & mindset", hood:"Hoodie collection", big:"Big cats & tuskers", skull:"Skulls & dark", ink:"Ink & watercolour", type:"Type & graphic", gym:"Gym"};
 const SIZES = ["S","M","L","XL"];
 
@@ -374,16 +379,33 @@ function printSize(d, variant){
   const [ ,w,h] = d.v[variant], [nw,nh] = NATIVE_BOX[d.native];
   const cls = (S.size==="S"||S.size==="M") ? "SM" : "LXL";
   const [tw,th] = GARMENTS[S.g].box[cls];
-  // hoodies (2026-11-14) and fit designs (2026-11-17 refs, one file resized per garment): fitted straight into the box, same as their print files
-  let k = (S.g==="hoodie"||d.custom||d.fit) ? Math.min(tw/w, th/h) : Math.min(tw/nw, th/nh), W=w*k, Hc=h*k;
+  // hoodies (32x46 / 29x42), long sleeves (34x46 / 30x41, keeping natural size for compact prints like s03/s06) and fit/custom designs: match their actual DTF print files
+  let k;
+  if(S.g==="hoodie"||d.custom||d.fit) k = Math.min(tw/w, th/h);
+  else if(S.g==="longsleeve"){ const [lw,lh]=GARMENTS.longsleeve.box.LXL; k = Math.min(1, lw/w, lh/h) * (cls==="SM"?Math.min(tw/lw, th/lh):1); }
+  else k = Math.min(tw/nw, th/nh);
+  let W=w*k, Hc=h*k;
   const fit = Math.min(1, tw/W, th/Hc); W*=fit; Hc*=fit;
   return [W,Hc,cls];
 }
 
 // ---- render ---------------------------------------------------------------
 // compose(): draws the mockup into a 2D context at scale sc (1 = 900 px page view, 2 = 1800 px HD for zoom/save).
-// Fold analysis runs only on the area around the print, so the HD render stays fast on phones.
+// Base luminance blur arrays (Ls, Lm, Lb) are cached per (baseKey, sc) so swiping designs on phones is instant.
 const CHEST={S:53.3,M:55.9,L:58.4,XL:61};
+const baseLumCache = new Map();
+function getBaseLum(baseKey, sc, img, W, H){
+  const key = baseKey+"@"+sc;
+  if(baseLumCache.has(key)) return baseLumCache.get(key);
+  if(baseLumCache.size>=4) baseLumCache.delete(baseLumCache.keys().next().value);
+  const bc=document.createElement("canvas"); bc.width=W; bc.height=H;
+  const bx=bc.getContext("2d"); bx.drawImage(img,0,0);
+  const rp=bx.getImageData(0,0,W,H).data, L=new Float32Array(W*H);
+  for(let i=0;i<W*H;i++) L[i]=(rp[i*4]*.299+rp[i*4+1]*.587+rp[i*4+2]*.114)/255;
+  const entry={Ls:blur(L,W,H,Math.round(sc)), Lm:blur(L,W,H,4*sc), Lb:blur(L,W,H,36*sc)};
+  baseLumCache.set(key,entry);
+  return entry;
+}
 async function compose(c2d, sc, alive){
   const baseKey=GARMENTS[S.g].colours[S.c], geo=BASES[baseKey], group=COLOURS[S.c].group;
   const img=await loadImg((sc>1?"b2/":"b/")+baseKey+".jpg"); if(!alive()) return null;
@@ -401,15 +423,11 @@ async function compose(c2d, sc, alive){
   if(geo.hood){ const tip=Math.max(...geo.hood.map(p=>p[1])); by=tip-Math.min(5,0.25*hcm)*cm; }  // hoodies (2026-11-17, Dileepa chose): print box 32x46 (S/M 29x42), top tucks up to 5 cm under the hood (max 25% of the print)
   else if(shortP){ by=by+(0.5*boxH-hcm)*0.35*cm; } // short prints drop a little so they sit on the upper back, not on the collar
   const bw=Math.round(wcm*cm*sc), bh=Math.round(hcm*cm*sc), bx=Math.round(geo.cx*sc-bw/2); by=Math.round(by*sc);
-  // base luminance around the print (pad covers the wide blur)
-  const pad=Math.round(60*sc), rx=Math.max(0,bx-pad), ry=Math.max(0,by-pad), rw=Math.min(W,bx+bw+pad)-rx, rh=Math.min(H,by+bh+pad)-ry;
-  const rp=c2d.getImageData(rx,ry,rw,rh).data, L=new Float32Array(rw*rh);
-  for(let i=0;i<rw*rh;i++) L[i]=(rp[i*4]*.299+rp[i*4+1]*.587+rp[i*4+2]*.114)/255;
-  const Ls=blur(L,rw,rh,Math.round(sc)), Lm=blur(L,rw,rh,4*sc), Lb=blur(L,rw,rh,36*sc);
+  const {Ls,Lm,Lb}=getBaseLum(baseKey,sc,img,W,H);
   const pc=document.createElement("canvas"); pc.width=bw; pc.height=bh;
   const px=pc.getContext("2d"); px.imageSmoothingQuality="high"; px.drawImage(pimg,0,0,bw,bh);
   const pdata=px.getImageData(0,0,bw,bh), P=pdata.data; if(d.custom&&d.src) sharpen(P,bw,bh,0.6);
-  const out=c2d.getImageData(bx,by,bw,bh), O=out.data, ix=(x,y)=>(by+y-ry)*rw+(bx+x-rx);
+  const out=c2d.getImageData(bx,by,bw,bh), O=out.data, ix=(x,y)=>Math.min(H-1,Math.max(0,by+y))*W+Math.min(W-1,Math.max(0,bx+x));
   let sum=0,sum2=0,n=0, vals=[]; const st=3*sc;
   for(let y=0;y<bh;y+=st)for(let x=0;x<bw;x+=st){const i=ix(x,y), v=Lm[i]-Lb[i]; sum+=v;sum2+=v*v;n++; vals.push(Ls[i]);}
   const sd=Math.max(.004,Math.sqrt(sum2/n-(sum/n)**2)); vals.sort((a,b)=>a-b);
@@ -465,10 +483,11 @@ function sharpen(P,w,h,amt){ // light unsharp mask on the print after it is scal
   const src=new Uint8ClampedArray(P);
   for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const k=(y*w+x)*4; if(src[k+3]<8) continue;
     for(let c=0;c<3;c++){ const v=src[k+c], b=(src[k-4+c]+src[k+4+c]+src[k-w*4+c]+src[k+w*4+c])/4; P[k+c]=v+(v-b)*amt; } } }
-function trimAlpha(c){ // crop to the visible art so it fills the print box
-  const x=c.getContext("2d"), id=x.getImageData(0,0,c.width,c.height), P=id.data; let x0=c.width,y0=c.height,x1=-1,y1=-1;
-  for(let y=0;y<c.height;y++)for(let i=0;i<c.width;i++) if(P[(y*c.width+i)*4+3]>24){ if(i<x0)x0=i; if(i>x1)x1=i; if(y<y0)y0=y; if(y>y1)y1=y; }
-  if(x1<0) return c; const o=document.createElement("canvas"); o.width=x1-x0+1; o.height=y1-y0+1; o.getContext("2d").drawImage(c,-x0,-y0); return o; }
+function trimAlpha(c){ // crop to the visible art so it fills the print box; returns null if almost nothing remains
+  const x=c.getContext("2d"), id=x.getImageData(0,0,c.width,c.height), P=id.data; let x0=c.width,y0=c.height,x1=-1,y1=-1,vis=0;
+  for(let y=0;y<c.height;y++)for(let i=0;i<c.width;i++) if(P[(y*c.width+i)*4+3]>24){ vis++; if(i<x0)x0=i; if(i>x1)x1=i; if(y<y0)y0=y; if(y>y1)y1=y; }
+  if(x1<0||vis<c.width*c.height*0.015) return null;
+  const o=document.createElement("canvas"); o.width=x1-x0+1; o.height=y1-y0+1; o.getContext("2d").drawImage(c,-x0,-y0); return o; }
 function halftone(c, dark){ // keeps every pixel's own colour (full detail); only the fading / near-shirt-colour parts turn into a 45° dot screen, like the real print files
   const w=c.width,h=c.height, x=c.getContext("2d"), id=x.getImageData(0,0,w,h), P=id.data, s=Math.max(3,Math.max(w,h)/230), k=Math.PI/s;
   for(let y=0;y<h;y++)for(let i=0;i<w;i++){ const o=(y*w+i)*4, A=P[o+3]/255; if(!A) continue;
@@ -483,9 +502,19 @@ function customArt(){ // processed upload for the current shirt colour, cached
   if(CUSTOM.art&&CUSTOM.artKey===key) return CUSTOM.art;
   const im=CUSTOM.src, k=Math.min(1,1600/Math.max(im.width,im.height)), w=Math.max(1,Math.round(im.width*k)), h=Math.max(1,Math.round(im.height*k));
   let c=document.createElement("canvas"); c.width=w; c.height=h; const x=c.getContext("2d",{willReadFrequently:true}); x.drawImage(im,0,0,w,h);
-  if(bgOn){ const id=x.getImageData(0,0,w,h); cutBackground(id,w,h); x.putImageData(id,0,0); c=trimAlpha(c); }
+  if(bgOn){
+    const id=x.getImageData(0,0,w,h); cutBackground(id,w,h); x.putImageData(id,0,0);
+    const trimmed=trimAlpha(c);
+    if(trimmed){ c=trimmed; }
+    else { // low-contrast photo where edge flood-fill removed the subject: keep original photo
+      x.clearRect(0,0,w,h); x.drawImage(im,0,0,w,h);
+      $("custBg").checked=false;
+      $("toast").textContent="Background was too close to the subject, so we kept the full photo.";
+    }
+  }
+  const finalKey=[dark,$("custBg").checked,htOn].join();
   if(htOn) c=halftone(c,dark);
-  CUSTOM.art=c; CUSTOM.artKey=key; CUSTOM.v.custom=[null,c.width/Math.max(1,c.height),1];
+  CUSTOM.art=c; CUSTOM.artKey=finalKey; CUSTOM.v.custom=[null,c.width/Math.max(1,c.height),1];
   try{ $("custThumb").src=c.toDataURL("image/png"); }catch(e){}
   return c; }
 function customPlaceholder(){ // dashed box shown until the customer uploads their design
@@ -591,8 +620,11 @@ function drawQuick(){
   addEventListener("keydown",e=>{ if(Z.open||/INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
     if(e.key==="ArrowRight") stepDesign(1); else if(e.key==="ArrowLeft") stepDesign(-1); });
 })();
+const SIZE_GUIDE={S:'21" (53 cm) chest · 28.5" length',M:'22" (56 cm) chest · 29.5" length',L:'23" (58 cm) chest · 30.5" length',XL:'24" (61 cm) chest · 31.5" length'};
 function drawSizes(){$("sizes").replaceChildren(...SIZES.map(z=>chip(z,"",S.size===z,()=>{S.size=z;drawSizes();render();updateMsg();})));
-  $("sizeNote").textContent=(S.size==="S"||S.size==="M")?"S and M get a smaller print (34 cm on a tee), so it covers the same share of the back as on L.":"L and XL get the full-size print (38 cm on a tee).";}
+  const [sw,sh]=GARMENTS[S.g].box.SM, [lw,lh]=GARMENTS[S.g].box.LXL, gn=GARMENTS[S.g].name.toLowerCase();
+  const boxTxt=(S.size==="S"||S.size==="M")?`S and M get a ${sw} × ${sh} cm print box on a ${gn} (proportionate to L/XL ${lw} × ${lh} cm).`:`L and XL get the full ${lw} × ${lh} cm print box on a ${gn} (S/M: ${sw} × ${sh} cm).`;
+  $("sizeNote").textContent=`Size ${S.size}: ${SIZE_GUIDE[S.size]}. ${boxTxt}`;}
 function updateSpec(wcm,hcm){
   const g=GARMENTS[S.g];
   $("spec").innerHTML = S.d&&wcm ? `<span>Print <b>${wcm.toFixed(1)} × ${hcm.toFixed(1)} cm</b></span><span>Size <b>${S.size}</b></span><span>${g.name}, ${COLOURS[S.c].name.toLowerCase()}</span><span><b>${rs(unitPrice())}</b></span><span class="hint">Shown in true proportion for size ${S.size}</span>` : "";
@@ -612,6 +644,8 @@ function updateMsg(wcm,hcm){
     `Quantity: ${S.qty}`, `Price: ${S.qty>1?S.qty+" x "+rs(up)+" = ":""}${rs(tot)} (free delivery)`, nm?`Name: ${nm}`:"", city?`City: ${city}`:""].filter(Boolean);
   const text=lines.join("\n"); $("msg").textContent=text;
   const wa=$("wa"); $("mtotal").textContent=rs(tot);
+  const mspec=$("mspec");
+  if(mspec) mspec.textContent=`${SHORT[S.g]||g.name} · ${COLOURS[S.c].name} · ${S.size} · ${d?(d.custom?"CUSTOM (attach photo in chat)":d.code):"-"} · Free delivery`;
   if(WHATSAPP){ wa.href="https://wa.me/"+WHATSAPP+"?text="+encodeURIComponent(text); wa.removeAttribute("aria-disabled"); }
   else { wa.href="https://wa.me/?text="+encodeURIComponent(text); }
   $("mwa").href=wa.href;
@@ -623,9 +657,10 @@ function drawCustom(){const on=!!(S.d&&S.d.custom); $("custStep").hidden=!on; $(
   $("cupl").textContent=CUSTOM.src?"📷 Change photo":"📷 Upload your photo";
   $("custFee").innerHTML=`Your own design adds <b>${rs(CUSTOM_FEE)}</b> and takes <b>${CUSTOM_DAYS}</b>, because we prepare and print it just for you. <span class="si">ඔයාගේම design එකකට ${rs(CUSTOM_FEE)}ක් වැඩිපුර, දවස් ටිකක් වැඩිපුර යනවා.</span><br>After you tap Order on WhatsApp, send your image in the same chat.`;}
 $("custFile").onchange=e=>{const f=e.target.files&&e.target.files[0]; if(!f) return; const u=URL.createObjectURL(f), im=new Image();
-  im.onload=()=>{CUSTOM.src=im; CUSTOM.art=null; CUSTOM.file=f.name; $("custThumb").hidden=false;
+  im.onload=()=>{URL.revokeObjectURL(u); CUSTOM.src=im; CUSTOM.art=null; CUSTOM.file=f.name; $("custThumb").hidden=false;
     $("custName").textContent=f.name+" · send this image on WhatsApp after ordering"; drawCustom(); render(); updateMsg();};
-  im.src=u;};
+  im.onerror=()=>{URL.revokeObjectURL(u); $("toast").textContent="Could not read that image file.";};
+  im.src=u; e.target.value="";};
 $("custNote").oninput=()=>updateMsg();
 $("custBg").onchange=$("custHt").onchange=()=>{CUSTOM.art=null; render();};
 function refresh(){drawGarments();drawFabric();drawColours();drawPrints();drawQuick();drawCustom();drawSizes();render();updateMsg();}
@@ -633,8 +668,43 @@ $("qm").onclick=()=>{S.qty=Math.max(1,S.qty-1);$("qv").textContent=S.qty;updateM
 $("qp").onclick=()=>{S.qty=Math.min(20,S.qty+1);$("qv").textContent=S.qty;updateMsg();};
 $("nm").oninput=$("city").oninput=()=>updateMsg();
 $("copy").onclick=()=>{const t=updateMsg();navigator.clipboard?.writeText(t).then(()=>$("toast").textContent="Order copied. Paste it in WhatsApp.",()=>{const r=document.createRange();r.selectNodeContents($("msg"));getSelection().removeAllRanges();getSelection().addRange(r);$("toast").textContent="Text selected. Copy it with your keyboard or long-press.";});};
-$("save").onclick=async()=>{$("saveWrap").hidden=false;$("saveImg").src=cv.toDataURL("image/jpeg",.9);$("saveWrap").scrollIntoView({behavior:"smooth",block:"nearest"});const u=await hdDataURL();if(u)$("saveImg").src=u;};
+$("save").onclick=async()=>{
+  $("saveWrap").hidden=false;$("saveImg").src=cv.toDataURL("image/jpeg",.9);$("saveWrap").scrollIntoView({behavior:"smooth",block:"nearest"});
+  const u=await hdDataURL();if(u)$("saveImg").src=u;
+  if(navigator.canShare&&navigator.share){
+    try{
+      const b=await (await fetch(u||$("saveImg").src)).blob();
+      const fn=`gini-${S.g}-${S.c}-${S.d?S.d.code.toLowerCase():"mockup"}.jpg`;
+      const file=new File([b],fn,{type:"image/jpeg"});
+      if(navigator.canShare({files:[file]})) await navigator.share({files:[file],title:"My GINI design",text:updateMsg()});
+    }catch(e){}
+  }
+};
 S.d=D.find(d=>d.name==="Fire Skull");
+// URL deep-linking (?g=hoodie&c=black&d=GN-08&s=L&gsm=250) for TikTok bio and video links
+(function(){
+  const q=new URLSearchParams(location.search);
+  const g=(q.get("g")||q.get("garment")||"").toLowerCase();
+  if(GARMENTS[g]){ S.g=g; if(!GARMENTS[g].colours[S.c]) S.c=Object.keys(GARMENTS[g].colours)[0]; }
+  const c=(q.get("c")||q.get("colour")||q.get("color")||"").toLowerCase();
+  if(GARMENTS[S.g].colours[c]) S.c=c;
+  const s=(q.get("s")||q.get("size")||"").toUpperCase();
+  if(SIZES.includes(s)) S.size=s;
+  const gsm=q.get("gsm")||"";
+  if(FABRICS[gsm]) S.gsm=gsm;
+  const dk=(q.get("d")||q.get("design")||"").trim();
+  if(dk){
+    const u=dk.toUpperCase(), num=/^\d+$/.test(u)?"GN-"+u.padStart(2,"0"):u;
+    const found = (u==="CUSTOM") ? CUSTOM : D.find(x=>x.code===num || x.name.toLowerCase()===dk.toLowerCase() || Object.values(x.v).some(v=>v[0]===dk || v[0].startsWith(dk)));
+    if(found){
+      if(!vk(found)){ // switch to a valid colour on this garment if needed
+        const vc=Object.keys(GARMENTS[S.g].colours).find(ck=>{const bk=GARMENTS[S.g].colours[ck], gr=COLOURS[ck].group; return found.v[bk]||found.v[gr];});
+        if(vc) S.c=vc;
+      }
+      if(vk(found)) S.d=found;
+    }
+  }
+})();
 refresh();
 </script>
 <script>if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
