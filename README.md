@@ -2,7 +2,7 @@
 
 Customers pick a garment, colour, design and size, see a live mockup, and send the order on WhatsApp.
 
-Live: https://weargini.com/
+Live: https://studio.weargini.com/
 
 This repo is the built site. The source lives on Dileepa's Mac in `TikTokBrand/07_web/gini_designer/` (`index.html`, `prep_assets.py`, `build_site.py`); update steps are in `CUSTOM_STUDIO_UPDATE.md` there.
 
