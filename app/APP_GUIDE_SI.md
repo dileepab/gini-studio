@@ -13,7 +13,7 @@
   - `app/assets/` = icon + splash මුල් images (ගිනි wordmark එකෙන්)
   - `app/store/` = store එකට දාන්න හදපු screenshots, feature graphic, 512 icon
   - `app/native/` = app එකට විතරක් එකතු කරපු දේවල් (WhatsApp app එකෙන් order, share/save mockup, back button, vibration)
-  - `privacy.html` (repo root) = privacy policy. Link එක: **https://dileepab.github.io/gini-studio/privacy.html**
+  - `privacy.html` (repo root) = privacy policy. Link එක: **https://weargini.com/privacy.html**
 - App එක ඇතුළේ website එකේම copy එකක් තියෙනවා (designs 76, garments 14, prices). ඒ නිසා **internet නැතුවත් වැඩ** කරනවා. Order එක යන්නේ WhatsApp **0702010070** ට.
 - Personal prints (personal_dileepa) app එකේ නෑ. Build script එක ඒවා ආවොත් නවත්තනවා.
 
@@ -138,10 +138,10 @@ Play Store එකට upload කරන හැම version එකක්ම මේ k
 - App icon: `app/store/android/icon_512.png`
 - Feature graphic: `app/store/android/feature_graphic_1024x500.png`
 - Phone screenshots: `app/store/android/screen_1.png` ... `screen_4.png`
-- Category: **Shopping**. Email: GINI email එක. Website: `https://dileepab.github.io/gini-studio/`
+- Category: **Shopping**. Email: GINI email එක. Website: `https://weargini.com/`
 
 **App content (Policy) කොටස:**
-- Privacy policy: `https://dileepab.github.io/gini-studio/privacy.html`
+- Privacy policy: `https://weargini.com/privacy.html`
 - Ads: **No ads**
 - App access: **All functionality available without special access** (login නෑ)
 - Content rating: questionnaire එක පුරවන්න (violence/sex/gambling සේරම No) → Everyone/3+ වගේ එනවා
@@ -180,7 +180,7 @@ Play Store එකට upload කරන හැම version එකක්ම මේ k
 ### 6.4 App Store Connect
 1. https://appstoreconnect.apple.com → **Apps → + → New App**: Platform iOS, Name `GINI Studio` (අරගෙන නම් `GINI Custom Studio`), language English, Bundle ID `lk.gini.studio`, SKU `gini-studio-1`.
 2. Screenshots: 6.9" display එකට `app/store/ios_6.9in/screen_1..4.png`, 6.5" එකට `app/store/ios_6.5in/...`.
-3. Description, keywords (`tshirt, hoodie, custom, design, streetwear, sri lanka, gini, print`), Support URL `https://dileepab.github.io/gini-studio/`, Privacy Policy URL `https://dileepab.github.io/gini-studio/privacy.html`.
+3. Description, keywords (`tshirt, hoodie, custom, design, streetwear, sri lanka, gini, print`), Support URL `https://weargini.com/`, Privacy Policy URL `https://weargini.com/privacy.html`.
 4. App Privacy: **Data Not Collected**.
 5. Category: **Shopping**. Age rating: questionnaire සේරම None → 4+.
 6. Upload කරපු build එක තෝරලා **Add for Review → Submit**.
