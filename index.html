@@ -41,6 +41,44 @@ header.top{display:flex;align-items:baseline;justify-content:space-between;gap:1
   .spec{margin-top:6px;font-size:12px;gap:2px 12px}
   .spec .hint{display:none}
 }
+@media (min-width:861px){
+  .wrap{max-width:1580px;padding-inline:clamp(24px,3.5vw,52px);padding-block:24px 60px}
+  .grid{grid-template-columns:minmax(420px,520px) minmax(0,1fr);gap:clamp(32px,3.5vw,56px);align-items:start}
+  .stage{position:sticky;top:16px;z-index:5}
+  .stage .frame{max-height:calc(100vh - 84px);width:auto}
+  .panel-dock{
+    position:sticky;
+    top:0;
+    z-index:20;
+    background:var(--soot);
+    padding-top:4px;
+    padding-bottom:14px;
+    margin-bottom:4px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    flex-wrap:wrap;
+    gap:16px 28px;
+    align-items:start;
+    box-shadow:0 10px 18px -6px rgba(21,18,17,.92);
+  }
+  .panel-dock .step{flex:1 1 240px;min-width:0;gap:8px}
+  .panel-dock .step h2{font-size:18px;margin-bottom:6px}
+  .prints{
+    grid-template-columns:repeat(auto-fill,minmax(104px,1fr));
+    gap:10px;
+    max-height:clamp(340px,46vh,520px);
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    padding-right:8px;
+    padding-bottom:8px;
+    scrollbar-width:thin;
+    scrollbar-color:var(--line) transparent;
+  }
+  .prints::-webkit-scrollbar{width:6px}
+  .prints::-webkit-scrollbar-track{background:transparent}
+  .prints::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px}
+  .prints::-webkit-scrollbar-thumb:hover{background:var(--ember)}
+}
 .frame{position:relative;background:#cbbfb3;border-radius:6px;overflow:hidden;aspect-ratio:900/1205;max-width:100%;margin:0 auto}
 .frame canvas{display:block;width:100%;height:100%}
 .frame .busy{position:absolute;inset:auto 10px 10px auto;background:rgba(21,18,17,.75);color:var(--bone);font-size:12px;padding:4px 10px;border-radius:99px}
@@ -150,9 +188,10 @@ html.zoom-open,html.zoom-open body{overflow:hidden}
   .mbar small{font-size:11px;color:var(--smoke)}
   .mbar .btn{padding:12px 16px}
   .wrap{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
-  /* phone (Dileepa, Nov 17): the quick dock above already picks garment, colour and design, so those 3 steps are hidden here; tee fabric chips stay */
-  .panel>.step:nth-child(1)>h2,#garments,.panel>.step:nth-child(2),.panel>.step:nth-child(3){display:none}
-  .panel>.step:nth-child(1) .fabric{margin-top:0}
+  /* phone (Dileepa, Nov 17): the quick dock above already picks garment, colour and design, so those steps are hidden here; tee fabric chips stay */
+  .panel-dock{display:contents}
+  .step-garment>h2,#garments,.step-colour,.step-design,.panel>.step:nth-child(1)>h2,.panel>.step:nth-child(2),.panel>.step:nth-child(3){display:none}
+  .step-garment .fabric,.panel>.step:nth-child(1) .fabric{margin-top:0}
   .panel h2 i{display:none}
 }
 @media (prefers-reduced-motion:no-preference){.chip,.pc,.sw{transition:border-color .15s, box-shadow .15s}}
@@ -172,17 +211,19 @@ html.zoom-open,html.zoom-open body{overflow:hidden}
     </section>
 
     <section class="panel">
-      <div class="step">
-        <h2><i>01</i>Garment <span class="si">ඇඳුම</span></h2>
-        <div class="chips" id="garments"></div>
-        <div class="fabric" id="fabric" hidden></div>
+      <div class="panel-dock" id="panelDock">
+        <div class="step step-garment">
+          <h2><i>01</i>Garment <span class="si">ඇඳුම</span></h2>
+          <div class="chips" id="garments"></div>
+          <div class="fabric" id="fabric" hidden></div>
+        </div>
+        <div class="step step-colour">
+          <h2><i>02</i>Colour <span class="si">පාට</span></h2>
+          <div class="chips" id="colours"></div>
+          <div class="swlabel" id="colourName"></div>
+        </div>
       </div>
-      <div class="step">
-        <h2><i>02</i>Colour <span class="si">පාට</span></h2>
-        <div class="chips" id="colours"></div>
-        <div class="swlabel" id="colourName"></div>
-      </div>
-      <div class="step">
+      <div class="step step-design">
         <h2><i>03</i>Design <span class="si">Print එක</span></h2>
         <div class="filter" id="filter"></div>
         <div class="prints" id="prints"></div>
@@ -594,20 +635,29 @@ function drawColours(){const el=$("colours");el.replaceChildren(...Object.keys(G
 function vk(d){if(d&&d.custom) return "custom"; const bk=GARMENTS[S.g].colours[S.c], g=COLOURS[S.c].group; return d&&(d.v[bk]?bk:(d.v[g]?g:null));}
 function available(){const l=D.filter(d=>vk(d)); return [CUSTOM,...(S.g==="hoodie"?[...l.filter(d=>d.cat==="hood"),...l.filter(d=>d.cat!=="hood")]:l)];}
 function drawPrints(){
+  const scrollBefore = $("prints").scrollTop;
   const g=COLOURS[S.c].group, list=available();
   const cats=["all",...Object.keys(CATS).filter(c=>c!=="all"&&list.some(d=>d.cat===c))];
   if(!cats.includes(S.cat)) S.cat="all";
-  $("filter").replaceChildren(...cats.map(c=>chip(CATS[c],"",S.cat===c,()=>{S.cat=c;drawPrints();})));
+  $("filter").replaceChildren(...cats.map(c=>chip(CATS[c],"",S.cat===c,()=>{S.cat=c;$("prints").scrollTop=0;drawPrints();})));
   if(!S.d||!vk(S.d)) S.d = (S.g==="skinner"?list.find(d=>d.cat==="gym"):null) || list[1];
   $("prints").replaceChildren(...list.filter(d=>d.custom||S.cat==="all"||d.cat===S.cat).map(d=>{
     const b=document.createElement("button");b.type="button";b.className="pc";b.setAttribute("aria-pressed",S.d===d);
     b.innerHTML=d.custom?`<div class="th cu"><div style="text-align:center">+<small>YOUR DESIGN</small></div></div><div class="cd">CUSTOM</div><div class="nm">Your own design (+${rs(CUSTOM_FEE)})</div>`:`<div class="th ${g}"${d.cat==="hood"?` style="background:${COLOURS[S.c].hex}"`:""}><img loading="lazy" src="t/${d.v[vk(d)][0]}.webp" alt=""></div><div class="cd">${d.code}</div><div class="nm">${d.name}</div>`;
-    b.onclick=()=>selectDesign(d);return b;}));
+    b.onclick=()=>selectDesign(d,true);return b;}));
+  if(scrollBefore && $("prints").scrollHeight > $("prints").clientHeight) $("prints").scrollTop = scrollBefore;
 }
 // ---- quick switch (2026-11-17): garment / colour / design strips under the mockup, arrows, swipe -------
 const SHORT={tee:"Tee",hoodie:"Hoodie",skinner:"Arm-cut",longsleeve:"Long sleeve"};
-function selectDesign(d){const was=S.d; S.d=d;drawPrints();drawQuick();drawCustom();render();updateMsg();
-  if(d.custom&&was!==d&&!d.src){ try{$("custFile").click();}catch(e){} }}
+function selectDesign(d,skipScroll){const was=S.d; S.d=d;drawPrints();drawQuick();drawCustom();render();updateMsg();
+  if(d.custom&&was!==d&&!d.src){ try{$("custFile").click();}catch(e){} }
+  if(!skipScroll){
+    const active=$("prints").querySelector('[aria-pressed="true"]');
+    if(active && $("prints").scrollHeight>$("prints").clientHeight){
+      active.scrollIntoView({block:"nearest",behavior:"smooth"});
+    }
+  }
+}
 function stepDesign(dir){const l=available(); if(!l.length) return; const i=Math.max(0,l.indexOf(S.d)); selectDesign(l[(i+dir+l.length)%l.length]);}
 function centre(el,btn,smooth){ if(!btn||!el.clientWidth) return; el.scrollTo({left:btn.offsetLeft-(el.clientWidth-btn.offsetWidth)/2,behavior:smooth?"smooth":"auto"}); }
 (function(){var mq=matchMedia("(max-width:860px)"),on=false;function chk(){var pn=document.querySelector(".panel");var want=mq.matches&&pn&&pn.getBoundingClientRect().top<-40;if(want!==on){on=want;document.body.classList.toggle("compact",on);}}addEventListener("scroll",chk,{passive:true});addEventListener("resize",chk);})();
