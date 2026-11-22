@@ -86,6 +86,14 @@ header.top{display:flex;align-items:baseline;justify-content:space-between;gap:1
 .spec b{color:var(--bone);font-weight:600}
 .panel{display:flex;flex-direction:column;gap:26px;min-width:0}
 .step h2{display:flex;align-items:baseline;gap:10px;margin:0 0 10px;font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:.04em;text-transform:uppercase}
+.step-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 10px}
+.step-head h2{margin:0}
+.vote-bar{display:inline-flex;align-items:center;gap:6px;background:var(--char);border:1px solid var(--line);border-radius:99px;padding:3px 8px;font-size:12px}
+.vote-bar .vcode{font-family:var(--display);font-size:13px;letter-spacing:.05em;color:var(--smoke);font-weight:700;padding-left:4px}
+.vbtn{appearance:none;background:transparent;border:0;color:var(--smoke);cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:3px 7px;border-radius:99px;font:600 12px var(--body);transition:all .15s ease}
+.vbtn:hover{color:var(--bone);background:var(--ash)}
+.vbtn[aria-pressed="true"].like{color:var(--ember);background:rgba(240,112,46,.18);font-weight:700}
+.vbtn[aria-pressed="true"].dislike{color:#f05d5e;background:rgba(240,93,94,.18);font-weight:700}
 .step h2 i{font-style:normal;color:var(--ember);font-size:15px}
 .step h2 .si{font-family:var(--si);font-size:13px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--smoke)}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -98,7 +106,9 @@ header.top{display:flex;align-items:baseline;justify-content:space-between;gap:1
 .swlabel{font-size:13px;color:var(--smoke);margin-top:8px}
 .prints{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
 .pc{appearance:none;border:1px solid var(--line);background:var(--char);border-radius:4px;padding:6px 6px 8px;cursor:pointer;color:var(--bone);text-align:left;display:flex;flex-direction:column;gap:6px;min-width:0}
-.pc .th{aspect-ratio:1;display:grid;grid-template:minmax(0,1fr)/minmax(0,1fr);place-items:center;border-radius:2px;overflow:hidden}
+.pc .th{aspect-ratio:1;display:grid;grid-template:minmax(0,1fr)/minmax(0,1fr);place-items:center;border-radius:2px;overflow:hidden;position:relative}
+.pc-badge{position:absolute;bottom:3px;right:3px;background:rgba(21,18,17,.88);color:var(--smoke);font:600 10px/1 var(--body);padding:2px 5px;border-radius:3px;backdrop-filter:blur(3px);border:1px solid rgba(255,255,255,.08);display:inline-flex;align-items:center;gap:3px;z-index:2}
+.pc-badge.hot{color:var(--ember);border-color:rgba(240,112,46,.35);font-weight:700}
 .pc .th img{width:88%;height:88%;object-fit:contain}
 .pc .nm{font-size:12px;line-height:1.25}
 .pc .cd{font-size:10px;letter-spacing:.1em;color:var(--smoke);font-variant-numeric:tabular-nums}
@@ -224,7 +234,14 @@ html.zoom-open,html.zoom-open body{overflow:hidden}
         </div>
       </div>
       <div class="step step-design">
-        <h2><i>03</i>Design <span class="si">Print එක</span></h2>
+        <div class="step-head">
+          <h2><i>03</i>Design <span class="si">Print එක</span></h2>
+          <div class="vote-bar" id="voteBar" hidden>
+            <span class="vcode" id="voteCode"></span>
+            <button type="button" class="vbtn like" id="btnLike" title="Like this design" aria-label="Like this design">👍 <span id="likeCount">0</span></button>
+            <button type="button" class="vbtn dislike" id="btnDislike" title="Dislike this design" aria-label="Dislike this design">👎 <span id="dislikeCount">0</span></button>
+          </div>
+        </div>
         <div class="filter" id="filter"></div>
         <div class="prints" id="prints"></div>
         <p class="note" id="designNote">Every design here is made for this shirt colour, so the ink reads well on it.</p>
@@ -407,7 +424,7 @@ const D = [
  ["Skateboard","street",T,{light:["p13_skateboard_v1",38.0,53.1]},1],
 ].map((d,i)=>({name:d[0],cat:d[1],native:d[2],v:d[3],fit:!!d[4],code:"GN-"+String(i+1).padStart(2,"0")}));
 const NATIVE_BOX = {tee:[38,55], gym:[26,32.5], hoodie:[32,46]};
-const CATS = {all:"All", glow:"Glow & riders", street:"Street & mindset", hood:"Hoodie collection", big:"Big cats & tuskers", skull:"Skulls & dark", ink:"Ink & watercolour", type:"Type & graphic", gym:"Gym"};
+const CATS = {all:"All", top:"🔥 Top Voted", glow:"Glow & riders", street:"Street & mindset", hood:"Hoodie collection", big:"Big cats & tuskers", skull:"Skulls & dark", ink:"Ink & watercolour", type:"Type & graphic", gym:"Gym"};
 const SIZES = ["S","M","L","XL"];
 
 const S = {g:"tee", c:"black", d:null, size:"L", qty:1, cat:"all", gsm:"220"};
@@ -628,6 +645,113 @@ addEventListener("resize",()=>{ if(Z.open) zFit(); });
   $("zbtn").addEventListener("click",e=>{ e.stopPropagation(); openZoom(); });
 })();
 
+// ---- Voting System (Firestore REST) ---------------------------------------
+const FIRESTORE_URL = "https://firestore.googleapis.com/v1/projects/studio-4207278931-f63d2/databases/(default)/documents/print_votes";
+const FIRESTORE_KEY = atob("QUl6YVN5QXhiSVlyT21SOXN6VnJub1g5QWdUM3FhZDFlNEZRZVVF");
+let VOTES = {};
+let MY_VOTES = {};
+try { MY_VOTES = JSON.parse(localStorage.getItem("gini_votes") || "{}"); } catch(e){}
+
+function getVote(code){
+  return VOTES[code] || {likes:0, dislikes:0};
+}
+
+async function loadVotes(){
+  try {
+    const res = await fetch(`${FIRESTORE_URL}?key=${FIRESTORE_KEY}`);
+    if(!res.ok) return;
+    const data = await res.json();
+    if(data.documents){
+      data.documents.forEach(doc => {
+        const parts = doc.name.split("/");
+        const code = parts[parts.length - 1];
+        const f = doc.fields || {};
+        VOTES[code] = {
+          likes: parseInt(f.likes && f.likes.integerValue || "0", 10),
+          dislikes: parseInt(f.dislikes && f.dislikes.integerValue || "0", 10)
+        };
+      });
+      drawVoteBar();
+      drawPrints();
+    }
+  } catch(e){}
+}
+
+async function castVote(deltaLikes, deltaDislikes){
+  if(!S.d || S.d.custom) return;
+  const code = S.d.code;
+  const cur = getVote(code);
+  const newLikes = Math.max(0, cur.likes + deltaLikes);
+  const newDislikes = Math.max(0, cur.dislikes + deltaDislikes);
+
+  VOTES[code] = { likes: newLikes, dislikes: newDislikes };
+  drawVoteBar();
+  drawPrints();
+
+  try {
+    await fetch(`${FIRESTORE_URL}/${code}?updateMask.fieldPaths=likes&updateMask.fieldPaths=dislikes&key=${FIRESTORE_KEY}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fields: {
+          likes: { integerValue: String(newLikes) },
+          dislikes: { integerValue: String(newDislikes) }
+        }
+      })
+    });
+  } catch(e){}
+}
+
+function onVote(type){
+  if(!S.d || S.d.custom) return;
+  const code = S.d.code;
+  const curVote = MY_VOTES[code] || 0;
+
+  if(type === "like"){
+    if(curVote === 1){
+      delete MY_VOTES[code];
+      castVote(-1, 0);
+    } else if(curVote === -1){
+      MY_VOTES[code] = 1;
+      castVote(1, -1);
+    } else {
+      MY_VOTES[code] = 1;
+      castVote(1, 0);
+    }
+  } else if(type === "dislike"){
+    if(curVote === -1){
+      delete MY_VOTES[code];
+      castVote(0, -1);
+    } else if(curVote === 1){
+      MY_VOTES[code] = -1;
+      castVote(-1, 1);
+    } else {
+      MY_VOTES[code] = -1;
+      castVote(0, 1);
+    }
+  }
+  try { localStorage.setItem("gini_votes", JSON.stringify(MY_VOTES)); } catch(e){}
+  drawVoteBar();
+}
+
+function drawVoteBar(){
+  const vb = $("voteBar");
+  if(!vb) return;
+  if(!S.d || S.d.custom){
+    vb.hidden = true;
+    return;
+  }
+  vb.hidden = false;
+  const code = S.d.code;
+  const v = getVote(code);
+  const my = MY_VOTES[code] || 0;
+  $("voteCode").textContent = code;
+  $("likeCount").textContent = v.likes;
+  $("dislikeCount").textContent = v.dislikes;
+  $("btnLike").setAttribute("aria-pressed", my === 1);
+  $("btnDislike").setAttribute("aria-pressed", my === -1);
+}
+
 // ---- UI -------------------------------------------------------------------
 function chip(label,sub,pressed,on){const b=document.createElement("button");b.type="button";b.className="chip";b.setAttribute("aria-pressed",pressed);b.innerHTML=label+(sub?`<small>${sub}</small>`:"");b.onclick=on;return b;}
 function drawGarments(){const el=$("garments");el.replaceChildren(...Object.entries(GARMENTS).map(([k,g])=>chip(g.name,(typeof PRICES[k]==="object"?"from ":"")+rs(fromPrice(k)),S.g===k,()=>{S.g=k; if(!g.colours[S.c]) S.c=Object.keys(g.colours)[0]; refresh();})));}
@@ -637,19 +761,36 @@ function available(){const l=D.filter(d=>vk(d)); return [CUSTOM,...(S.g==="hoodi
 function drawPrints(){
   const scrollBefore = $("prints").scrollTop;
   const g=COLOURS[S.c].group, list=available();
-  const cats=["all",...Object.keys(CATS).filter(c=>c!=="all"&&list.some(d=>d.cat===c))];
+  const cats=["all","top",...Object.keys(CATS).filter(c=>c!=="all"&&c!=="top"&&list.some(d=>d.cat===c))];
   if(!cats.includes(S.cat)) S.cat="all";
   $("filter").replaceChildren(...cats.map(c=>chip(CATS[c],"",S.cat===c,()=>{S.cat=c;$("prints").scrollTop=0;drawPrints();})));
   if(!S.d||!vk(S.d)) S.d = (S.g==="skinner"?list.find(d=>d.cat==="gym"):null) || list[1];
-  $("prints").replaceChildren(...list.filter(d=>d.custom||S.cat==="all"||d.cat===S.cat).map(d=>{
+
+  let filtered = list.filter(d=>d.custom||S.cat==="all"||S.cat==="top"||d.cat===S.cat);
+  if(S.cat === "top"){
+    const custom = filtered.filter(d=>d.custom);
+    const regular = filtered.filter(d=>!d.custom).sort((a,b)=>{
+      const va = getVote(a.code), vb = getVote(b.code);
+      const sa = va.likes - va.dislikes, sb = vb.likes - vb.dislikes;
+      if(sb !== sa) return sb - sa;
+      return vb.likes - va.likes;
+    });
+    filtered = [...custom, ...regular];
+  }
+
+  $("prints").replaceChildren(...filtered.map(d=>{
     const b=document.createElement("button");b.type="button";b.className="pc";b.setAttribute("aria-pressed",S.d===d);
-    b.innerHTML=d.custom?`<div class="th cu"><div style="text-align:center">+<small>YOUR DESIGN</small></div></div><div class="cd">CUSTOM</div><div class="nm">Your own design (+${rs(CUSTOM_FEE)})</div>`:`<div class="th ${g}"${d.cat==="hood"?` style="background:${COLOURS[S.c].hex}"`:""}><img loading="lazy" src="t/${d.v[vk(d)][0]}.webp" alt=""></div><div class="cd">${d.code}</div><div class="nm">${d.name}</div>`;
+    const v = d.code ? getVote(d.code) : null;
+    const score = v ? (v.likes - v.dislikes) : 0;
+    const badge = (v && (v.likes > 0 || v.dislikes > 0)) ? `<span class="pc-badge${score > 0 ? " hot" : ""}">${score > 0 ? "🔥 "+score : (v.likes > 0 ? "👍 "+v.likes : "👎 "+v.dislikes)}</span>` : "";
+    b.innerHTML=d.custom?`<div class="th cu"><div style="text-align:center">+<small>YOUR DESIGN</small></div></div><div class="cd">CUSTOM</div><div class="nm">Your own design (+${rs(CUSTOM_FEE)})</div>`:`<div class="th ${g}"${d.cat==="hood"?` style="background:${COLOURS[S.c].hex}"`:""}><img loading="lazy" src="t/${d.v[vk(d)][0]}.webp" alt="">${badge}</div><div class="cd">${d.code}</div><div class="nm">${d.name}</div>`;
     b.onclick=()=>selectDesign(d,true);return b;}));
   if(scrollBefore && $("prints").scrollHeight > $("prints").clientHeight) $("prints").scrollTop = scrollBefore;
+  drawVoteBar();
 }
 // ---- quick switch (2026-11-17): garment / colour / design strips under the mockup, arrows, swipe -------
 const SHORT={tee:"Tee",hoodie:"Hoodie",skinner:"Arm-cut",longsleeve:"Long sleeve"};
-function selectDesign(d,skipScroll){const was=S.d; S.d=d;drawPrints();drawQuick();drawCustom();render();updateMsg();
+function selectDesign(d,skipScroll){const was=S.d; S.d=d;drawPrints();drawVoteBar();drawQuick();drawCustom();render();updateMsg();
   if(d.custom&&was!==d&&!d.src){ try{$("custFile").click();}catch(e){} }
   if(!skipScroll){
     const active=$("prints").querySelector('[aria-pressed="true"]');
@@ -769,7 +910,10 @@ S.d=D.find(d=>d.name==="Fire Skull");
     }
   }
 })();
+$("btnLike").onclick=()=>onVote("like");
+$("btnDislike").onclick=()=>onVote("dislike");
 refresh();
+loadVotes();
 </script>
 <script>if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </html>
