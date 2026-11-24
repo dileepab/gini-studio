@@ -426,7 +426,7 @@ const D = [
  ["Gta 3","street",T,{dark:["p15_gta_3_v1",31.0,55.0]},1],
  ["Gta 4","street",T,{light:["p16_gta_4_v1",38.0,46.3]},1],
  ["Gta 5","street",T,{light:["p17_gta_5_v1",38.0,47.9]},1],
-].map((d,i)=>({name:d[0],cat:d[1],native:d[2],v:d[3],fit:!!d[4],code:"GN-"+String(i+1).padStart(2,"0")}));
+].map((d,i)=>({name:d[0],cat:d[1],native:d[2],v:d[3],fit:!!d[4],idx:i,code:"GN-"+String(i+1).padStart(2,"0")}));
 const NATIVE_BOX = {tee:[38,55], gym:[26,32.5], hoodie:[32,46]};
 const CATS = {all:"All", top:"🔥 Top Voted", glow:"Glow & riders", street:"Street & mindset", hood:"Hoodie collection", big:"Big cats & tuskers", skull:"Skulls & dark", ink:"Ink & watercolour", type:"Type & graphic", gym:"Gym"};
 const SIZES = ["S","M","L","XL"];
@@ -654,6 +654,8 @@ const FIRESTORE_URL = "https://firestore.googleapis.com/v1/projects/studio-42072
 const FIRESTORE_KEY = atob("QUl6YVN5QXhiSVlyT21SOXN6VnJub1g5QWdUM3FhZDFlNEZRZVVF");
 let VOTES = {};
 let MY_VOTES = {};
+let userPickedDesign = false;
+let urlPickedDesign = false;
 try { MY_VOTES = JSON.parse(localStorage.getItem("gini_votes") || "{}"); } catch(e){}
 
 function getVote(code){
@@ -675,8 +677,13 @@ async function loadVotes(){
           dislikes: parseInt(f.dislikes && f.dislikes.integerValue || "0", 10)
         };
       });
+      if(!userPickedDesign && !urlPickedDesign){
+        const top = available()[1];
+        if(top && top !== S.d){ S.d = top; render(); updateMsg(); }
+      }
       drawVoteBar();
       drawPrints();
+      drawQuick();
     }
   } catch(e){}
 }
@@ -691,6 +698,7 @@ async function castVote(deltaLikes, deltaDislikes){
   VOTES[code] = { likes: newLikes, dislikes: newDislikes };
   drawVoteBar();
   drawPrints();
+  drawQuick();
 
   try {
     await fetch(`${FIRESTORE_URL}/${code}?updateMask.fieldPaths=likes&updateMask.fieldPaths=dislikes&key=${FIRESTORE_KEY}`, {
@@ -761,26 +769,25 @@ function chip(label,sub,pressed,on){const b=document.createElement("button");b.t
 function drawGarments(){const el=$("garments");el.replaceChildren(...Object.entries(GARMENTS).map(([k,g])=>chip(g.name,(typeof PRICES[k]==="object"?"from ":"")+rs(fromPrice(k)),S.g===k,()=>{S.g=k; if(!g.colours[S.c]) S.c=Object.keys(g.colours)[0]; refresh();})));}
 function drawColours(){const el=$("colours");el.replaceChildren(...Object.keys(GARMENTS[S.g].colours).map(c=>{const b=document.createElement("button");b.type="button";b.className="sw";b.style.background=COLOURS[c].hex;b.title=COLOURS[c].name;b.setAttribute("aria-label",COLOURS[c].name);b.setAttribute("aria-pressed",S.c===c);b.onclick=()=>{S.c=c;refresh();};return b;}));$("colourName").textContent=COLOURS[S.c].name+(Object.keys(GARMENTS[S.g].colours).length<2?" (more colours soon)":"");}
 function vk(d){if(d&&d.custom) return "custom"; const bk=GARMENTS[S.g].colours[S.c], g=COLOURS[S.c].group; return d&&(d.v[bk]?bk:(d.v[g]?g:null));}
-function available(){const l=D.filter(d=>vk(d)); return [CUSTOM,...(S.g==="hoodie"?[...l.filter(d=>d.cat==="hood"),...l.filter(d=>d.cat!=="hood")]:l)];}
+function sortDesigns(arr){
+  return [...arr].sort((a,b)=>{
+    const va = getVote(a.code), vb = getVote(b.code);
+    if(vb.likes !== va.likes) return vb.likes - va.likes;
+    const sa = va.likes - va.dislikes, sb = vb.likes - vb.dislikes;
+    if(sb !== sa) return sb - sa;
+    return b.idx - a.idx;
+  });
+}
+function available(){const l=sortDesigns(D.filter(d=>vk(d))); return [CUSTOM,...l];}
 function drawPrints(){
   const scrollBefore = $("prints").scrollTop;
   const g=COLOURS[S.c].group, list=available();
   const cats=["all","top",...Object.keys(CATS).filter(c=>c!=="all"&&c!=="top"&&list.some(d=>d.cat===c))];
   if(!cats.includes(S.cat)) S.cat="all";
   $("filter").replaceChildren(...cats.map(c=>chip(CATS[c],"",S.cat===c,()=>{S.cat=c;$("prints").scrollTop=0;drawPrints();})));
-  if(!S.d||!vk(S.d)) S.d = (S.g==="skinner"?list.find(d=>d.cat==="gym"):null) || list[1];
+  if(!S.d||!vk(S.d)) S.d = list[1];
 
   let filtered = list.filter(d=>d.custom||S.cat==="all"||S.cat==="top"||d.cat===S.cat);
-  if(S.cat === "top"){
-    const custom = filtered.filter(d=>d.custom);
-    const regular = filtered.filter(d=>!d.custom).sort((a,b)=>{
-      const va = getVote(a.code), vb = getVote(b.code);
-      const sa = va.likes - va.dislikes, sb = vb.likes - vb.dislikes;
-      if(sb !== sa) return sb - sa;
-      return vb.likes - va.likes;
-    });
-    filtered = [...custom, ...regular];
-  }
 
   $("prints").replaceChildren(...filtered.map(d=>{
     const b=document.createElement("button");b.type="button";b.className="pc";b.setAttribute("aria-pressed",S.d===d);
@@ -794,7 +801,7 @@ function drawPrints(){
 }
 // ---- quick switch (2026-11-17): garment / colour / design strips under the mockup, arrows, swipe -------
 const SHORT={tee:"Tee",hoodie:"Hoodie",skinner:"Arm-cut",longsleeve:"Long sleeve"};
-function selectDesign(d,skipScroll){const was=S.d; S.d=d;drawPrints();drawVoteBar();drawQuick();drawCustom();render();updateMsg();
+function selectDesign(d,skipScroll){userPickedDesign=true; const was=S.d; S.d=d;drawPrints();drawVoteBar();drawQuick();drawCustom();render();updateMsg();
   if(d.custom&&was!==d&&!d.src){ try{$("custFile").click();}catch(e){} }
   if(!skipScroll){
     const active=$("prints").querySelector('[aria-pressed="true"]');
@@ -889,7 +896,7 @@ $("save").onclick=async()=>{
     }catch(e){}
   }
 };
-S.d=D.find(d=>d.name==="Fire Skull");
+S.d=available()[1];
 // URL deep-linking (?g=hoodie&c=black&d=GN-08&s=L&gsm=250) for TikTok bio and video links
 (function(){
   const q=new URLSearchParams(location.search);
@@ -910,8 +917,10 @@ S.d=D.find(d=>d.name==="Fire Skull");
         const vc=Object.keys(GARMENTS[S.g].colours).find(ck=>{const bk=GARMENTS[S.g].colours[ck], gr=COLOURS[ck].group; return found.v[bk]||found.v[gr];});
         if(vc) S.c=vc;
       }
-      if(vk(found)) S.d=found;
+      if(vk(found)){ S.d=found; urlPickedDesign=true; }
     }
+  } else {
+    S.d=available()[1];
   }
 })();
 $("btnLike").onclick=()=>onVote("like");
