@@ -182,7 +182,7 @@ html.zoom-open,html.zoom-open body{overflow:hidden}
   .qg button[aria-pressed="true"]{border-color:var(--ember);background:var(--ember);color:#1a0f08;font-weight:600}
   .qc{padding:5px 4px;gap:10px}
   .qc .sw{flex:none;width:30px;height:30px}
-  .qd button{flex:none;width:60px;height:60px;border-radius:6px;border:2px solid var(--line);padding:0;overflow:hidden;cursor:pointer;display:grid;grid-template:minmax(0,1fr)/minmax(0,1fr);place-items:center}
+  .qd button{position:relative;flex:none;width:60px;height:60px;border-radius:6px;border:2px solid var(--line);padding:0;overflow:hidden;cursor:pointer;display:grid;grid-template:minmax(0,1fr)/minmax(0,1fr);place-items:center}
   .qd button img{width:86%;height:86%;object-fit:contain}
   .qd button[aria-pressed="true"]{border-color:var(--ember);box-shadow:0 0 0 1px var(--ember)}
   .frame canvas{object-fit:cover;object-position:50% 60%}
@@ -215,7 +215,7 @@ html.zoom-open,html.zoom-open body{overflow:hidden}
 
   <div class="grid">
     <section class="stage" aria-label="Live mockup">
-      <div class="frame" id="frame"><canvas id="cv" width="900" height="1205" role="img" aria-label="Mockup of the selected garment with the selected print"></canvas><label class="cupl" id="cupl" for="custFile" hidden>📷 Upload your photo</label><div class="busy" id="busy">Loading…</div><button type="button" class="nav prev" id="dprev" aria-label="Previous design">‹</button><button type="button" class="nav next" id="dnext" aria-label="Next design">›</button><button type="button" class="zbtn" id="zbtn" aria-label="Zoom in on the mockup"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21M10.5 7.5v6M7.5 10.5h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Zoom</button></div>
+      <div class="frame" id="frame"><canvas id="cv" width="900" height="1205" role="img" aria-label="Mockup of the selected garment with the selected print"></canvas><label class="cupl" id="cupl" for="custFile" hidden>📷 Upload your photo</label><div class="vote-bar" id="voteBar" hidden><span class="vcode" id="voteCode"></span><button type="button" class="vbtn like" id="btnLike" title="Like this design" aria-label="Like this design">👍 <span id="likeCount">0</span></button><button type="button" class="vbtn dislike" id="btnDislike" title="Dislike this design" aria-label="Dislike this design">👎 <span id="dislikeCount">0</span></button></div><div class="busy" id="busy">Loading…</div><button type="button" class="nav prev" id="dprev" aria-label="Previous design">‹</button><button type="button" class="nav next" id="dnext" aria-label="Next design">›</button><button type="button" class="zbtn" id="zbtn" aria-label="Zoom in on the mockup"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21M10.5 7.5v6M7.5 10.5h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Zoom</button></div>
       <div class="spec" id="spec"></div>
       <div class="quick" id="quick" aria-label="Quick change"><div class="qrow qg" id="qg"></div><div class="qrow qc" id="qc"></div><div class="qrow qd" id="qd"></div></div>
     </section>
@@ -236,11 +236,6 @@ html.zoom-open,html.zoom-open body{overflow:hidden}
       <div class="step step-design">
         <div class="step-head">
           <h2><i>03</i>Design <span class="si">Print එක</span></h2>
-          <div class="vote-bar" id="voteBar" hidden>
-            <span class="vcode" id="voteCode"></span>
-            <button type="button" class="vbtn like" id="btnLike" title="Like this design" aria-label="Like this design">👍 <span id="likeCount">0</span></button>
-            <button type="button" class="vbtn dislike" id="btnDislike" title="Dislike this design" aria-label="Dislike this design">👎 <span id="dislikeCount">0</span></button>
-          </div>
         </div>
         <div class="filter" id="filter"></div>
         <div class="prints" id="prints"></div>
@@ -822,16 +817,19 @@ function drawQuick(){
   let sel=null;
   qd.replaceChildren(...available().map(d=>{const b=document.createElement("button");b.type="button";b.className="th "+g;if(d.cat==="hood")b.style.background=COLOURS[S.c].hex;
     b.title=d.code+" "+d.name;b.setAttribute("aria-label",d.code+" "+d.name);b.setAttribute("aria-pressed",S.d===d);if(S.d===d)sel=b;
-    b.innerHTML=d.custom?`<div style="text-align:center">+<small>YOUR<br>DESIGN</small></div>`:`<img loading="lazy" src="t/${d.v[vk(d)][0]}.webp" alt="">`;if(d.custom)b.className="th cu";b.onclick=()=>selectDesign(d);return b;}));
+    const v = d.code ? getVote(d.code) : null;
+    const score = v ? (v.likes - v.dislikes) : 0;
+    const badge = (v && (v.likes > 0 || v.dislikes > 0)) ? `<span class="pc-badge${score > 0 ? " hot" : ""}">${score > 0 ? "🔥 "+score : (v.likes > 0 ? "👍 "+v.likes : "👎 "+v.dislikes)}</span>` : "";
+    b.innerHTML=d.custom?`<div style="text-align:center">+<small>YOUR<br>DESIGN</small></div>`:`<img loading="lazy" src="t/${d.v[vk(d)][0]}.webp" alt="">${badge}`;if(d.custom)b.className="th cu";b.onclick=()=>selectDesign(d);return b;}));
   requestAnimationFrame(()=>{centre(qd,sel,true);centre(qc,qc.querySelector('[aria-pressed="true"]'));centre(qg,qg.querySelector('[aria-pressed="true"]'));});
 }
 (function(){
   const f=$("frame"); let sx=0,sy=0,act=false,swiped=false;
-  f.addEventListener("pointerdown",e=>{sx=e.clientX;sy=e.clientY;act=true;swiped=false;});
+  f.addEventListener("pointerdown",e=>{if(e.target.closest(".nav,.cupl,.vote-bar")) return; sx=e.clientX;sy=e.clientY;act=true;swiped=false;});
   f.addEventListener("pointerup",e=>{ if(!act) return; act=false; const dx=e.clientX-sx, dy=e.clientY-sy;
     if(Math.abs(dx)>40&&Math.abs(dx)>1.5*Math.abs(dy)){ swiped=true; stepDesign(dx<0?1:-1); } });
   f.addEventListener("pointercancel",()=>{act=false;});
-  f.addEventListener("click",e=>{ if(swiped){swiped=false;return;} if(e.target.closest(".nav,.cupl")) return; openZoom(); });
+  f.addEventListener("click",e=>{ if(swiped){swiped=false;return;} if(e.target.closest(".nav,.cupl,.vote-bar")) return; openZoom(); });
   $("dprev").addEventListener("click",e=>{e.stopPropagation();stepDesign(-1);});
   $("dnext").addEventListener("click",e=>{e.stopPropagation();stepDesign(1);});
   addEventListener("keydown",e=>{ if(Z.open||/INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
