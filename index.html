@@ -81,19 +81,19 @@ header.top{display:flex;align-items:baseline;justify-content:space-between;gap:1
 }
 .frame{position:relative;background:#cbbfb3;border-radius:6px;overflow:hidden;aspect-ratio:900/1205;max-width:100%;margin:0 auto}
 .frame canvas{display:block;width:100%;height:100%}
-.frame .busy{position:absolute;inset:auto 10px 10px auto;background:rgba(21,18,17,.75);color:var(--bone);font-size:12px;padding:4px 10px;border-radius:99px}
+.frame .busy{position:absolute;inset:10px 10px auto auto;background:rgba(21,18,17,.75);color:var(--bone);font-size:12px;padding:4px 10px;border-radius:99px;z-index:3}
 .spec{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:12px;font-size:13px;color:var(--smoke);font-variant-numeric:tabular-nums;justify-content:center}
 .spec b{color:var(--bone);font-weight:600}
 .panel{display:flex;flex-direction:column;gap:26px;min-width:0}
 .step h2{display:flex;align-items:baseline;gap:10px;margin:0 0 10px;font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:.04em;text-transform:uppercase}
 .step-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 10px}
 .step-head h2{margin:0}
-.vote-bar{display:inline-flex;align-items:center;gap:6px;background:var(--char);border:1px solid var(--line);border-radius:99px;padding:3px 8px;font-size:12px}
-.vote-bar .vcode{font-family:var(--display);font-size:13px;letter-spacing:.05em;color:var(--smoke);font-weight:700;padding-left:4px}
-.vbtn{appearance:none;background:transparent;border:0;color:var(--smoke);cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:3px 7px;border-radius:99px;font:600 12px var(--body);transition:all .15s ease}
-.vbtn:hover{color:var(--bone);background:var(--ash)}
-.vbtn[aria-pressed="true"].like{color:var(--ember);background:rgba(240,112,46,.18);font-weight:700}
-.vbtn[aria-pressed="true"].dislike{color:#f05d5e;background:rgba(240,93,94,.18);font-weight:700}
+.vote-bar{position:absolute;right:10px;bottom:10px;z-index:3;display:inline-flex;align-items:center;gap:5px;background:rgba(21,18,17,.84);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.18);border-radius:99px;padding:4px 8px;font-size:12px;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.vote-bar .vcode{font-family:var(--display);font-size:13px;letter-spacing:.05em;color:var(--bone);font-weight:700;padding-inline:4px 2px}
+.vbtn{appearance:none;background:rgba(255,255,255,.07);border:1px solid transparent;color:var(--bone);cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:99px;font:600 12px var(--body);transition:all .15s ease}
+.vbtn:hover{background:rgba(255,255,255,.15)}
+.vbtn[aria-pressed="true"].like{color:#1a0f08;background:var(--ember);border-color:var(--ember-2);font-weight:700}
+.vbtn[aria-pressed="true"].dislike{color:#fff;background:#d64546;border-color:#f05d5e;font-weight:700}
 .step h2 i{font-style:normal;color:var(--ember);font-size:15px}
 .step h2 .si{font-family:var(--si);font-size:13px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--smoke)}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -426,6 +426,7 @@ const D = [
  ["Gta 3","street",T,{dark:["p15_gta_3_v1",31.0,55.0]},1],
  ["Gta 4","street",T,{light:["p16_gta_4_v1",38.0,46.3]},1],
  ["Gta 5","street",T,{light:["p17_gta_5_v1",38.0,47.9]},1],
+ ["Just Do It","street",G,{dark:["p18_just_do_it_v1",26.0,26.1]},1],
 ].map((d,i)=>({name:d[0],cat:d[1],native:d[2],v:d[3],fit:!!d[4],idx:i,code:"GN-"+String(i+1).padStart(2,"0")}));
 const NATIVE_BOX = {tee:[38,55], gym:[26,32.5], hoodie:[32,46]};
 const CATS = {all:"All", top:"🔥 Top Voted", glow:"Glow & riders", street:"Street & mindset", hood:"Hoodie collection", big:"Big cats & tuskers", skull:"Skulls & dark", ink:"Ink & watercolour", type:"Type & graphic", gym:"Gym"};
